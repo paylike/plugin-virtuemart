@@ -1,11 +1,11 @@
-# Joomla Virtuemart plugin for Paylike
+# Joomla VirtueMart plugin for Paylike
 
 This plugin is *not* developed or maintained by Paylike but kindly made
 available by a user.
 
 Released under the GPL V3 license: https://opensource.org/licenses/GPL-3.0
 
-## Supported Virtuemart versions
+## Supported VirtueMart versions
 
 - \>= 3.2.8
 
@@ -16,20 +16,20 @@ Released under the GPL V3 license: https://opensource.org/licenses/GPL-3.0
 
 ## Installation
 
-1.Once you have installed Virtuemart on your Joomla setup, follow these simple steps:
+1.Once you have installed VirtueMart on your Joomla setup, follow these simple steps:
   Signup at (paylike.io) [https://paylike.io] (it’s free)
   
   1. Create a live account
   1. Create an app key for your Joomla website
   1. Upload the plugin zip trough the .
   1. Activate the plugin through the 'Extensions' screen in Joomla.
-  1. Under Virtuemart payment methods create a new payment method and select Paylike.
+  1. Under VirtueMart payment methods create a new payment method and select Paylike.
   1. Insert the app key and your public key in the settings for the Paylike payment gateway you just created
   
 
 ## Updating settings
 
-Under the Virtuemart Paylike payment method settings, you can:
+Under the VirtueMart Paylike payment method settings, you can:
  * Update the payment method text in the payment gateways list
  * Update the payment method description in the payment gateways list
  * Update the title that shows up in the payment popup 
