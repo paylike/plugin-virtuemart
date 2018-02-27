@@ -1,0 +1,78 @@
+#paylike {
+    background-color: #005e8d;
+    border-radius: 5px;
+    color: #fff;
+    display: inline-block;
+    margin-top: 6px;
+    padding: 5px 20px;
+}
+
+.order_details strong {
+    display: block;
+    font-size: 14px;
+}
+
+.orderDetail .order_details {
+    list-style: outside none none;
+    margin: 0;
+    padding: 0;
+}
+
+.order_details li {
+    font-size: 16px;
+    list-style: outside none none;
+    padding: 5px 0 !important;
+    line-height: 24px;
+}
+
+.order_details a {
+    background: #005e8d none repeat scroll 0 0;
+    border-radius: 6px;
+    color: #fff;
+    padding: 6px 20px;
+}
+
+.payment_logo {
+    display: inline-block;
+    margin-left: 6px;
+}
+
+.payment_box.payment_method_paylike, .paylike_desc {
+    font-family: sans-serif, serif;
+    font-size: 14px;
+    padding: 0px 30px 0;
+    margin-top: 2px;
+    margin-bottom: 10px;
+}
+
+.paylike-wrapper {
+    padding-left: 16px;
+}
+
+.vm-payment-select .paylike-wrapper {
+    padding-left: 0;
+    vertical-align: top;
+    max-width: 195px;
+    margin-top: -5px;
+}
+
+.paylike_title {
+    float: left;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 6px 0;
+}
+
+.payment_logo img {
+    margin: 0 2px 0 0;
+    width: 45px;
+}
+
+.orderDetail > h3 {
+    font-size: 18px;
+}
+
+.order_details > li a {
+    color: #fff;
+    text-decoration: none;
+}

@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<extension version="2.5" type="plugin" group="vmpayment">
+    <!-- Basic Plugin Detail -->
+    <name>VM - Payment, Paylike</name>
+    <creationDate>August 2017</creationDate>
+    <author>Paylike Development Team</author>
+    <copyright>Copyright (C) 2017 PAYLIKE Team. All rights reserved.</copyright>
+    <license></license>
+    <version>1.0.0</version>
+    <description><![CDATA[<a href="http://paylike.com" target="_blank">Paylke</a> is a popular
+  payment provider. ]]>
+    </description>
+    <!-- Include plugin files and folders -->
+    <files>
+        <filename plugin="paylike">paylike.php</filename>
+        <filename>paylike.js</filename>
+        <filename>bootstrap.min.js</filename>
+        <filename>bootstrap.min.css</filename>
+        <filename>paylike.css</filename>
+        <filename>common.php</filename>
+        <folder>images</folder>
+        <folder>Paylike</folder>
+    </files>
+    <!-- Define language file path -->
+    <languages>
+        <language tag="en-GB">en-GB.plg_vmpayment_paylike.ini</language>
+    </languages>
+    <!-- Admin Settings Fields -->
+    <vmconfig>
+        <fields name="params">
+            <fieldset name="basic">
+                <field type="text" name="title" default="Credit Card (Paylike)" label="VMPAYMENT_PAYLIKE_TITLE"/>
+                <field name="active" type="list" default="1" label="VMPAYMENT_PAYLIKE_ACTIVE">
+                    <option value="1">Yes</option>
+                    <option value="0">No</option>
+                </field>
+                <field type="textarea" name="description" label="VMPAYMENT_PAYLIKE_DESCRIPTION"
+                       default="Secure payment with credit card via © Paylike" rows="5" cols="10"/>
+
+                <field name="test_mode" type="list" label="VMPAYMENT_TEST_MODE" default=""
+                       description="VMPAYMENT_TEST_MODE_DESCRIPTION">
+                    <option value="1">Test</option>
+                    <option value="0">Live</option>
+                </field>
+                <field type="text" name="live_api_key" label="VMPAYMENT_PAYLIKE_LIVE_MODE_API_KEY" default=""
+                       description="VMPAYMENT_PAYLIKE_MODE_DESCRIPTION"/>
+                <field type="text" name="live_public_key" label="VMPAYMENT_PAYLIKE_LIVE_MODE_PUBLIC_KEY" default=""
+                       description="VMPAYMENT_PAYLIKE_MODE_DESCRIPTION"/>
+
+                <field type="text" name="test_api_key" label="VMPAYMENT_PAYLIKE_TEST_MODE_API_KEY" default=""
+                       description="VMPAYMENT_PAYLIKE_MODE_DESCRIPTION"/>
+                <field type="text" name="test_public_key" label="VMPAYMENT_PAYLIKE_TEST_MODE_PUBLIC_KEY" default=""
+                       description="VMPAYMENT_PAYLIKE_MODE_DESCRIPTION"/>
+                <field type="text" name="popup_title" default="" label="VMPAYMENT_PAYLIKE_POPUP_TITLE"
+                       description="VMPAYMENT_PAYLIKE_POPUP_TITLE_DESCRIPTION"/>
+                <field type="list" name="checkout_mode" label="VMPAYMENT_PAYLIKE_CHECKOUT_MODE" default="" 
+                       description="VMPAYMENT_PAYLIKE_CHECKOUT_MODE_DESCRIPTION">
+                    <option value="before">Payment before order created</option>
+                    <option value="after">Redirect to payment page after order created</option>
+                </field>
+                <field type="list" name="capture_mode" label="VMPAYMENT_PAYLIKE_CAPTURE_MODE" default=""
+                       description="VMPAYMENT_PAYLIKE_CAPTURE_MODE_DESCRIPTION">
+                    <option value="instant">Instant</option>
+                    <option value="delayed">Delayed</option>
+                </field>
+                <field type="list" name="card" label="VMPAYMENT_PAYLIKE_CARD" default="" multiple="multiple">
+                    <option value="mastercard">MasterCard</option>
+                    <option value="maestro">Maestro</option>
+                    <option value="visa">Visa</option>
+                    <option value="viselectron">Visa Electron</option>
+                </field>
+                <field name="mastercard" type="media" label="VMPAYMENT_PAYLIKE_MASTERCARD_LOGO" description=""
+                       default="plugins/vmpayment/paylike/images/mastercard.svg"/>
+                <field name="maestro" type="media" label="VMPAYMENT_PAYLIKE_MAESTRO_LOGO" description=""
+                       default="plugins/vmpayment/paylike/images/maestro.svg"/>
+                <field name="visa" type="media" label="VMPAYMENT_PAYLIKE_VISA_LOGO" description=""
+                       default="plugins/vmpayment/paylike/images/visa.svg"/>
+                <field name="visaelectron" type="media" label="VMPAYMENT_PAYLIKE_VISAELECTRON_LOGO" description=""
+                       default="plugins/vmpayment/paylike/images/visaelectron.svg"/>
+            </fieldset>
+        </fields>
+    </vmconfig>
+
+    <!-- for joomla and virtuemart older versions-->
+    <params addpath="/administrator/components/com_virtuemart/elements"/>
+    <params>
+        <param type="vmjpluginwarning"/>
+        <param type="text" name="title" default="Credit Card (Paylike)" label="VMPAYMENT_PAYLIKE_TITLE"/>
+        <param name="active" type="list" default="1" label="VMPAYMENT_PAYLIKE_ACTIVE">
+            <option value="1">Yes</option>
+            <option value="0">No</option>
+        </param>
+        <param type="textarea" name="description" label="VMPAYMENT_PAYLIKE_DESCRIPTION"
+               default="Secure payment with credit card via © Paylike" rows="5" cols="10"/>
+
+        <param name="test_mode" type="list" label="VMPAYMENT_TEST_MODE" default=""
+               description="VMPAYMENT_TEST_MODE_DESCRIPTION">
+            <option value="1">Test</option>
+            <option value="0">Live</option>
+        </param>
+        <param type="text" name="live_api_key" label="VMPAYMENT_PAYLIKE_LIVE_MODE_API_KEY" default=""
+               description="VMPAYMENT_PAYLIKE_MODE_DESCRIPTION"/>
+        <param type="text" name="live_public_key" label="VMPAYMENT_PAYLIKE_LIVE_MODE_PUBLIC_KEY" default=""
+               description="VMPAYMENT_PAYLIKE_MODE_DESCRIPTION"/>
+
+        <param type="text" name="test_api_key" label="VMPAYMENT_PAYLIKE_TEST_MODE_API_KEY" default=""
+               description="VMPAYMENT_PAYLIKE_MODE_DESCRIPTION"/>
+        <param type="text" name="test_public_key" label="VMPAYMENT_PAYLIKE_TEST_MODE_PUBLIC_KEY" default=""
+               description="VMPAYMENT_PAYLIKE_MODE_DESCRIPTION"/>
+        <param type="text" name="popup_title" default="" label="VMPAYMENT_PAYLIKE_POPUP_TITLE"
+               description="VMPAYMENT_PAYLIKE_POPUP_TITLE_DESCRIPTION"/>
+        <param type="list" name="checkout_mode" label="VMPAYMENT_PAYLIKE_CHECKOUT_MODE" default=""
+               description="VMPAYMENT_PAYLIKE_CHECKOUT_MODE_DESCRIPTION">
+            <option value="before">Payment before order created</option>
+            <option value="after">Redirect to payment page after order created</option>
+        </param>
+        <param type="list" name="capture_mode" label="VMPAYMENT_PAYLIKE_CAPTURE_MODE" default=""
+               description="VMPAYMENT_PAYLIKE_CAPTURE_MODE_DESCRIPTION">
+            <option value="instant">Instant</option>
+            <option value="delayed">Delayed</option>
+        </param>
+        <param type="list" name="card" label="VMPAYMENT_PAYLIKE_CARD" default="" multiple="multiple">
+            <option value="mastercard">MasterCard</option>
+            <option value="maestro">Maestro</option>
+            <option value="visa">Visa</option>
+            <option value="viselectron">Visa Electron</option>
+        </param>
+        <param name="mastercard" type="filelist" label="VMPAYMENT_PAYLIKE_MASTERCARD_LOGO" description=""
+               directory="/plugins/vmpayment/paylike/images" default="/plugins/vmpayment/paylike/images/mastercard.svg"
+               hide_default="1" hide_none="1" stripext="0" exclude="^_"/>
+        <param name="maestro" type="filelist" directory="/plugins/vmpayment/paylike/images"
+               label="VMPAYMENT_PAYLIKE_MAESTRO_LOGO" description=""
+               default="/plugins/vmpayment/paylike/images/maestro.svg" hide_default="1" hide_none="1" stripext="0"
+               exclude="^_"/>
+        <param name="visa" type="filelist" directory="/plugins/vmpayment/paylike/images"
+               label="VMPAYMENT_PAYLIKE_VISA_LOGO" description="" default="/plugins/vmpayment/paylike/images/visa.svg"
+               hide_default="1" hide_none="1" stripext="0" exclude="^_"/>
+        <param name="visaelectron" directory="/plugins/vmpayment/paylike/images" type="filelist"
+               label="VMPAYMENT_PAYLIKE_VISAELECTRON_LOGO" description=""
+               default="/plugins/vmpayment/paylike/images/visaelectron.png" hide_default="1" hide_none="1" stripext="0"
+               exclude="^_"/>
+    </params>
+</extension>
