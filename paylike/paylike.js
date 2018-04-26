@@ -50,6 +50,7 @@ jQuery(function () {
         var paylikeEcommerce = jQuery("[name=paylikeEcommerce]").val();
         var paylikeEcommerceVersion = jQuery("[name=paylikeEcommerceVersion]").val();
         var paylikePopupTitle = jQuery("[name=paylikePopupTitle]").val();
+        var paylikeLocale = jQuery("[name=paylikeLocale]").val();
         var virtuemartOrderId = jQuery("[name=virtuemart_order_id]").val();
         data = {};
         i = 0;
