@@ -536,7 +536,8 @@ class plgVmPaymentPaylike extends vmPSPlugin {
 			$db->execute();
 		} else {
 			/* get API Key */
-			echo $publicKey;
+			echo $publicKey; 
+			jexit();
 		}
 
 	}
