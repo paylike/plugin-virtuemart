@@ -180,7 +180,11 @@ class plgVmPaymentPaylike extends vmPSPlugin {
 	}
 
 	function plgVmConfirmedOrder( $cart, $order ) {
-		//echo "<pre>";print_r($order);
+
+		$method = $this->getPaymentDetail( $order['details']['BT']->virtuemart_paymentmethod_id ); // get method detail
+
+		if(!count($method)) return; 
+
 		$currency_model  = VmModel::getModel( 'currency' );
 		$currency_id     = $order["details"]["BT"]->order_currency;
 		$displayCurrency = $currency_model->getCurrency( $currency_id );
@@ -222,8 +226,12 @@ class plgVmPaymentPaylike extends vmPSPlugin {
 		return $this->setOnTablePluginParams( $name, $id, $table );
 	}
 
-	function plgVmOnUpdateOrderPayment( $orders, $old_order_status ) {
+	function plgVmOnUpdateOrderPayment( $orders, $old_order_status ) { 
+
 		$method = $this->getPaymentDetail( $orders->virtuemart_paymentmethod_id ); // get method detail
+
+		if(!count($method)) return; 
+
 		/* if testing mode */
 		if ( $method['test_mode'] == 1 ) {
 			$privateKey = $method['test_api_key'];
@@ -591,10 +599,15 @@ class plgVmPaymentPaylike extends vmPSPlugin {
 	/* get Payment Method Detail for database */
 	function getPaymentDetail( $virtuemart_paymentmethod_id ) {
 		$db = JFactory::getDBO();
-		$q  = 'SELECT payment_params FROM `#__virtuemart_paymentmethods` '
+		$q  = 'SELECT * FROM `#__virtuemart_paymentmethods` '
 		      . 'WHERE `virtuemart_paymentmethod_id` = ' . $virtuemart_paymentmethod_id;
 		$db->setQuery( $q );
-		$data         = $db->loadresult();
+		$row         = $db->loadObject();
+
+		if($row->payment_element!="paylike") { return array(); }
+		
+		$data = $row->payment_params;
+
 		$explodedData = explode( "|", $data );
 		$finalData    = [];
 		foreach ( $explodedData as $exp ) {

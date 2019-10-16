@@ -94,7 +94,7 @@ jQuery(function () {
                     name: paylikeEcommerce,
                     version: paylikeEcommerceVersion
                 },
-                paylikePluginVersion: '1.0.0'
+                paylikePluginVersion: '1.1.1'
             }
         }, function (err, r) {
             if (r != undefined) {
@@ -177,7 +177,7 @@ function popup() {
                 name: paylikeEcommerce,
                 version: paylikeEcommerceVersion
             },
-            paylikePluginVersion: '1.0.0'
+            paylikePluginVersion: '1.1.1'
         }
     }, function (err, r) {
         if (r != undefined) {
