@@ -18,7 +18,7 @@ Released under the GPL V3 license: https://opensource.org/licenses/GPL-3.0
   
   1. Create a live account
   1. Create an app key for your Joomla website
-  1. Upload the plugin zip trough the .
+  1. Upload the plugin zip trough the 'Extensions' screen in Joomla.
   1. Activate the plugin through the 'Extensions' screen in Joomla.
   1. Under VirtueMart payment methods create a new payment method and select Paylike.
   1. Insert the app key and your public key in the settings for the Paylike payment gateway you just created
