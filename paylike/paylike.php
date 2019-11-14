@@ -71,7 +71,7 @@ class plgVmPaymentPaylike extends vmPSPlugin {
 		if ( $method->active == 1 ) {
 			if ( ! in_array( $method->virtuemart_paymentmethod_id, $this->id ) ) {
 				array_push( $this->id, $method->virtuemart_paymentmethod_id );
-				/* if sandcox mode */
+				/* if sandbox mode */
 				if ( $method->test_mode == 1 ) {
 					$apiKey    = $method->test_api_key;
 					$publicKey = $method->test_public_key;
@@ -85,7 +85,7 @@ class plgVmPaymentPaylike extends vmPSPlugin {
 				/* load scripts and stylesheets*/
 				$document = JFactory::getDocument();
 				$document->addScript( 'https://sdk.paylike.io/3.js' );
-				$document->addScript( 'https://ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js' );
+				JHtml::_('jquery.framework');
 				$document->addScript( JURI::base() . 'plugins/vmpayment/paylike/paylike.js' );
 				$document->addScript( JURI::base() . 'plugins/vmpayment/paylike/bootstrap.min.js' );
 				$document->addStyleSheet( JURI::base() . 'plugins/vmpayment/paylike/paylike.css' );
@@ -204,7 +204,7 @@ class plgVmPaymentPaylike extends vmPSPlugin {
 			<script type="text/javascript">
                 jQuery(window).load(function () {
                     setTimeout(function () {
-                        jQuery("body").append('<button type="button" class="orderDetail" class="btn btn-info btn-lg" data-toggle="modal" data-target="#myModal" style="display:none;">Open Modal</button><div class="modal fade" id="myModal" role="dialog"> <div class="modal-dialog" style="text-align: left;"> <div class="modal-content">     <div class="modal-header"> <button type="button" class="close" data-dismiss="modal">&times;</button> <h4 class="modal-title">Pay for Order</h4> </div> <div class="modal-body" style="padding: 10px 30px;"> <p><div class="orderDetail"><ul class="order_details"><li class="order">Order number:<strong><?php echo $order["details"]["BT"]->order_number; ?></strong></li><li class="date">Date:<strong><?php echo date( "M d,Y", strtotime( $order["details"]["BT"]->created_on ) ); ?></strong></li><li class="total">Total:<strong><?php echo $currency . number_format( $order["details"]["BT"]->order_total, 2 ); ?></strong></li><li class="method">Payment method:<strong><?php echo $this->getPaymentDetail( $order["details"]["BT"]->virtuemart_paymentmethod_id )['title']; ?></strong></li><li><a href="javascript:void(0);" id="afterOrderPaylike" >Pay</a></li></ul></div></p> </div> <div class="modal-footer"> <button type="button" class="btn btn-default" data-dismiss="modal">Close</button></div></div> </div> </div><style>.modal-backdrop.fade.in{ opacity: .4;}#myModal { background: none;margin-left: auto;width: 100%;overflow: hidden;}</style><input type="hidden" name="virtuemart_order_id" value="<?php echo $order["details"]["BT"]->virtuemart_order_id; ?>" /><input type="hidden" name="order_number" value="<?php echo $order["details"]["BT"]->order_number; ?>" /><script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"><\/script><script src="<?php echo JURI::base(); ?>plugins/vmpayment/paylike/bootstrap.min.js"><\/script>');
+                        jQuery("body").append('<button type="button" class="orderDetail" class="btn btn-info btn-lg" data-toggle="modal" data-target="#myModal" style="display:none;">Open Modal</button><div class="modal fade" id="myModal" role="dialog"> <div class="modal-dialog" style="text-align: left;"> <div class="modal-content">     <div class="modal-header"> <button type="button" class="close" data-dismiss="modal">&times;</button> <h4 class="modal-title">Pay for Order</h4> </div> <div class="modal-body" style="padding: 10px 30px;"> <p><div class="orderDetail"><ul class="order_details"><li class="order">Order number:<strong><?php echo $order["details"]["BT"]->order_number; ?></strong></li><li class="date">Date:<strong><?php echo date( "M d,Y", strtotime( $order["details"]["BT"]->created_on ) ); ?></strong></li><li class="total">Total:<strong><?php echo $currency . number_format( $order["details"]["BT"]->order_total, 2 ); ?></strong></li><li class="method">Payment method:<strong><?php echo $this->getPaymentDetail( $order["details"]["BT"]->virtuemart_paymentmethod_id )['title']; ?></strong></li><li><a href="javascript:void(0);" id="afterOrderPaylike" >Pay</a></li></ul></div></p> </div> <div class="modal-footer"> <button type="button" class="btn btn-default" data-dismiss="modal">Close</button></div></div> </div> </div><style>.modal-backdrop.fade.in{ opacity: .4;}#myModal { background: none;margin-left: auto;width: 100%;overflow: hidden;}</style><input type="hidden" name="virtuemart_order_id" value="<?php echo $order["details"]["BT"]->virtuemart_order_id; ?>" /><input type="hidden" name="order_number" value="<?php echo $order["details"]["BT"]->order_number; ?>" />');
                         jQuery("#myModal").modal();
 
                         setTimeout(function () {
