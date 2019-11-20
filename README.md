@@ -9,7 +9,7 @@ Released under the GPL V3 license: https://opensource.org/licenses/GPL-3.0
 
 * The plugin has been tested with most versions of Virtuemart at every iteration. We recommend using the latest version of Virtuemart, but if that is not possible for some reason, test the plugin with your Virtuemart version and it would probably function properly. 
 * Virtuemart
- version last tested on: *3.6.2*
+ version last tested on: *3.6.8*
 
 ## Installation
 
