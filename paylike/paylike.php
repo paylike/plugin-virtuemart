@@ -16,6 +16,7 @@ class plgVmPaymentPaylike extends vmPSPlugin {
 		parent::__construct( $subject, $config );
 		$this->id = array();
 		$this->paylikeCurrency = new PaylikeCurrency();
+		
 		$this->_loggable = true;
 		$this->tableFields = array_keys( $this->getTableSQLFields() );
 		$this->_tablepkey = 'id';
@@ -40,9 +41,16 @@ class plgVmPaymentPaylike extends vmPSPlugin {
 			'visa'               => array( '', 'char' ),
 			'visaelectron'       => array( '', 'char' ),
 			'delay_order_status' => array( '', 'char' ),
+			'cost_per_transaction'    => array( '', 'int' ),
+			'cost_min_transaction'    => array( '', 'int' ),
+			'cost_percent_total'      => array( '', 'int' ),
+			'tax_id'                  => array( 0, 'int' ),
 		);
+		if(method_exists($this,'addVarsToPushCore')) $this->addVarsToPushCore($varsToPush, 1);
 		/* save setting params to database */
 		$this->setConfigParameterable( $this->_configTableFieldName, $varsToPush );
+		$this->setConvertable(array('cost_per_transaction','cost_min_transaction'));
+		$this->setConvertDecimal(array('cost_per_transaction','cost_min_transaction','cost_percent_total'));
 	}
 
 	/* create a new table for paylike transaction id and order detail */
@@ -58,10 +66,16 @@ class plgVmPaymentPaylike extends vmPSPlugin {
 			'virtuemart_paymentmethod_id' => 'mediumint(1) UNSIGNED',
 			'payment_name'                => 'varchar(5000)',
 			'amount'                      => 'decimal(15,5) NOT NULL DEFAULT \'0.00000\'',
+			'payment_currency'            => 'char(3)',
 			'status'                      => 'varchar(225)',
 			'mode'                        => 'varchar(225)',
 			'productinfo'                 => 'text',
 			'txnid'                       => 'varchar(29)',
+			'cost_per_transaction'        => 'decimal(10,2)',
+			'cost_min_transaction'        => 'decimal(10,2)',
+			'cost_percent_total'          => 'decimal(10,2)',
+			'tax_id'                      => 'smallint(1)',
+			'status_pending'              => 'char(3)',
 		);
 
 		return $SQLfields;
@@ -70,44 +84,52 @@ class plgVmPaymentPaylike extends vmPSPlugin {
 	/* check if module is enabled or not before showing option in frontend */
 	protected function checkConditions( $cart, $method, $cart_prices ) {
 		/* check if module is active */
-		if ( $method->active == 1 ) {
-			if ( ! in_array( $method->virtuemart_paymentmethod_id, $this->id ) ) {
-				array_push( $this->id, $method->virtuemart_paymentmethod_id );
-				/* if sandbox mode */
-				if ( $method->test_mode == 1 ) {
-					$apiKey = $method->test_api_key;
-					$publicKey = $method->test_public_key;
-					$mode = "test";
-				} /* if live mode */
-				else {
-					$apiKey = $method->live_api_key;
-					$publicKey = $method->live_public_key;
-					$mode = "live";
-				}
-				/* load scripts and stylesheets*/
-				$document = JFactory::getDocument();
-				$document->addScript( 'https://sdk.paylike.io/3.js' );
-				JHtml::_( 'jquery.framework' );
-				$document->addScript( JURI::base() . 'plugins/vmpayment/paylike/paylike.js' );
-				$document->addScript( JURI::base() . 'plugins/vmpayment/paylike/bootstrap.min.js' );
-				$document->addStyleSheet( JURI::base() . 'plugins/vmpayment/paylike/paylike.css' );
-				$document->addStyleSheet( JURI::base() . 'plugins/vmpayment/paylike/bootstrap.min.css' );
-
-				/* load needed params from cart to send in Paylike */
-				$this->loadParamsForPaylike( $publicKey, $method );
-
+		// vmdebug($method);
+		require_once(__DIR__.'/utils/asset.php');
+		if ( ! in_array( $method->virtuemart_paymentmethod_id, $this->id ) ) {
+			array_push( $this->id, $method->virtuemart_paymentmethod_id );
+			/* if sandbox mode */
+			if ( $method->test_mode == 1 ) {
+				$apiKey = $method->test_api_key;
+				$publicKey = $method->test_public_key;
+				$mode = "test";
+			} /* if live mode */
+			else {
+				$apiKey = $method->live_api_key;
+				$publicKey = $method->live_public_key;
+				$mode = "live";
 			}
+			
 
-			return true;
-		} else {
-			return false;
+			/* load needed params from cart to send in Paylike */
+			$this->loadParamsForPaylike( $publicKey, $method );
+
 		}
+		
+		vmdebug('Paylike checkConditions', $mode);
+		// return parent::checkConditions($cart, $method, $cart_prices);
+		return true;
 	}
 
 	function plgVmOnStoreInstallPaymentPluginTable( $jplugin_id ) {
 		return $this->onStoreInstallPluginTable( $jplugin_id );
 	}
-
+	
+	/*
+	* plgVmonSelectedCalculatePricePayment
+	* Calculate the price (value, tax_id) of the selected method
+	* It is called by the calculator
+	* This function does NOT to be reimplemented. If not reimplemented, then the default values from this function are taken.
+	* @cart: VirtueMartCart the current cart
+	* @cart_prices: array the new cart prices
+	* @return null if the method was not selected, false if the shiiping rate is not valid any more, true otherwise
+	*
+	*
+	*/
+	public function plgVmonSelectedCalculatePricePayment (VirtueMartCart $cart, array &$cart_prices, &$cart_prices_name) {
+		return $this->onSelectedCalculatePrice ($cart, $cart_prices, $cart_prices_name);
+	}
+	
 	/* On Select Payment Method on frontend, show related detail */
 	public function plgVmOnSelectCheckPayment( VirtueMartCart $cart ) {
 		return $this->OnSelectCheck( $cart );
@@ -119,11 +141,7 @@ class plgVmPaymentPaylike extends vmPSPlugin {
 		return $this->displayListFE( $cart, $selected, $htmlIn );
 	}
 
-	/*Show selected payment method */
-	public function plgVmonSelectedCalculatePricePayment( VirtueMartCart $cart, array &$cart_prices, &$cart_prices_name ) {
 
-		return $this->onSelectedCalculatePrice( $cart, $cart_prices, $cart_prices_name );
-	}
 
 	public function plgVmOnShowOrderFEPayment( $virtuemart_order_id, $virtuemart_paymentmethod_id, &$payment_name ) {
 		return $this->onShowOrderFE( $virtuemart_order_id, $virtuemart_paymentmethod_id, $payment_name );
@@ -142,8 +160,8 @@ class plgVmPaymentPaylike extends vmPSPlugin {
 		return $this->declarePluginParams( 'payment', $name, $id, $data );
 	}
 
-	protected function renderPluginName( $plugin ) {
-		//echo "<pre>";print_r($card);
+	protected function _renderPluginName( $plugin ) {
+		// echo "<pre>";print_r($card);
 		$return = "<div class='paylike-wrapper' style='display: inline-block'><div class='paylike_title' >" . $plugin->title . "</div>";
 		$return .= "<div class='payment_logo' >";
 		$card = implode( "~", $plugin->card );
@@ -193,6 +211,22 @@ class plgVmPaymentPaylike extends vmPSPlugin {
 		$currency_id = $order["details"]["BT"]->order_currency;
 		$displayCurrency = $currency_model->getCurrency( $currency_id );
 		$currency = $displayCurrency->currency_symbol;
+	//GJC
+	/*
+		$dbValues['payment_name'] = $this->renderPluginName ($method) . '<br />' . $method->payment_info;
+		$dbValues['order_number'] = $order['details']['BT']->order_number;
+		$dbValues['virtuemart_paymentmethod_id'] = $order['details']['BT']->virtuemart_paymentmethod_id;
+		$dbValues['cost_per_transaction'] = $method->cost_per_transaction;
+		$dbValues['cost_min_transaction'] = $method->cost_min_transaction;
+		$dbValues['cost_percent_total'] = $method->cost_percent_total;
+		$dbValues['payment_currency'] = $currency_code_3;
+		$dbValues['amount'] = $totalInPaymentCurrency['value'];
+		$dbValues['tax_id'] = $method->tax_id;
+		$dbValues['mode'] = $method->checkout_mode.' | '.$method->capture_mode;
+		$dbValues['txnid '] = $method->tax_id;
+		$this->storePSPluginInternalData ($dbValues);
+		*/
+	//GJC
 		$session = JFactory::getSession();
 		if ( $this->getPaymentDetail( $order["details"]["BT"]->virtuemart_paymentmethod_id )['checkout_mode'] != "after" ) { ?>
 			<script type="text/javascript">
@@ -337,7 +371,9 @@ class plgVmPaymentPaylike extends vmPSPlugin {
 
 		$priceInCents = ceil( round( $price, 3 ) * $this->paylikeCurrency->getPaylikeCurrencyMultiplier( $currency ) );
 		$address = $this->loadAddress();
-		foreach ( VirtueMartCart::getCart( false )->products as $product ) {
+		$cart = VirtueMartCart::getCart( false );
+		$cart->prepareCartData();
+		foreach ( $cart->products as $product ) {
 			echo "<input type='hidden' value='" . $product->product_name . "' name='paylikeProductName[]' />";
 			echo "<input type='hidden' value='" . $product->virtuemart_product_id . "' name='paylikeProductId[]' />";
 			echo "<input type='hidden' value='" . $product->quantity . "' name='paylikeQuantity[]' />";
@@ -345,12 +381,12 @@ class plgVmPaymentPaylike extends vmPSPlugin {
 				$price += $product->prices['salesPrice'] * $product->quantity;
 			}
 		}
-		if ( VirtueMartCart::getCart( false )->cartPrices['salesPriceShipment'] ) {
-			$price += VirtueMartCart::getCart( false )->cartPrices['salesPriceShipment'];
+		if ( $cart->cartPrices['salesPriceShipment'] ) {
+			$price += $cart->cartPrices['salesPriceShipment'];
 
 		}
 		// remove thousand seperators(,)
-		$price = floatval( str_replace( ",", "", $price ) );
+		$price = floatval( str_replace( ",", "", $cart->cartPrices['billTotal'] ) );
 
 		$priceInCents = ceil( round( $price, 3 ) * $this->paylikeCurrency->getPaylikeCurrencyMultiplier( $currency ) );
 		/* load hidden field having user and product data */
