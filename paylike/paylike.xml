@@ -6,7 +6,7 @@
     <author>Paylike Development Team</author>
     <copyright>Copyright (C) 2020 PAYLIKE Team. All rights reserved.</copyright>
     <license></license>
-    <version>1.1.5</version>
+    <version>1.2.2</version>
     <description><![CDATA[<a href="http://paylike.com" target="_blank">Paylke</a> is a popular
   payment provider. ]]>
     </description>
@@ -66,6 +66,22 @@
                 </field>
 				<field name="status_pending" type="vmorderstate" scope="com_virtuemart" default="U"
                        label="VMPAYMENT_PAYLIKE_STATUS_PENDING" description="VMPAYMENT_PAYLIKE_STATUS_PENDING_TIP"/>
+                <!--  <field name="status_success" type="vmorderstate" scope="com_virtuemart" default="C"
+                       label="VMPAYMENT_PAYLIKE_STATUS_SUCCESS" description="VMPAYMENT_PAYLIKE_STATUS_SUCCESS_TIP"/>
+               <field name="status_ipn_success_updateable" type="vmorderstate" scope="com_virtuemart" default=""  multiple="true"
+                       label="VMPAYMENT_PAYLIKE_STATUS_UPDATEABLE" description="VMPAYMENT_PAYLIKE_STATUS_UPDATEABLE_TIP"/>
+                <field name="status_canceled" type="vmorderstate" scope="com_virtuemart" default="X"
+                       label="VMPAYMENT_PAYLIKE_STATUS_CANCEL" description="VMPAYMENT_PAYLIKE_STATUS_CANCEL_TIP"/> -->
+                <field class="Authorization" name="status_capture" type="vmorderstate" scope="com_virtuemart"
+                       default="S"
+                       label="VMPAYMENT_PAYLIKE_STATUS_CAPTURE" description="VMPAYMENT_PAYLIKE_STATUS_CAPTURE_TIP"/>
+                <field name="status_refunded" type="vmorderstate" scope="com_virtuemart" default="R"
+                       label="VMPAYMENT_PAYLIKE_STATUS_REFUND" description="VMPAYMENT_PAYLIKE_STATUS_REFUND_TIP"/>
+                <!-- <field name="status_partial_refunded" type="vmorderstate" scope="com_virtuemart" default="R"
+                       label="VMPAYMENT_PAYLIKE_STATUS_PARTIAL_REFUND"
+                       description="VMPAYMENT_PAYLIKE_STATUS_PARTIAL_REFUND_TIP"/> -->
+                <field name="status_denied" type="vmorderstate" scope="com_virtuemart" default="D"
+                       label="COM_VIRTUEMART_ORDER_STATUS_DENIED" description="COM_VIRTUEMART_ORDER_STATUS_DENIED_TIP"/>
                 <field type="list" name="card" label="VMPAYMENT_PAYLIKE_CARD" default="" multiple="multiple">
                     <option value="mastercard">MasterCard</option>
                     <option value="maestro">Maestro</option>
@@ -90,6 +106,17 @@
                        description="VMPAYMENT_PAYLIKE_COST_PERCENT_TOTAL_TIP"/>
                 <field name="tax_id" type="vmtaxes" scope="com_virtuemart" label="VMPAYMENT_PAYLIKE_TAX"
                        description="VMPAYMENT_PAYLIKE_TAX_TIP"/>
+            </fieldset>
+			<fieldset name="option">
+		                <field name="min_amount" type="text" label="VMPAYMENT_PAYLIKE_MIN_AMOUNT"
+                       description="VMPAYMENT_PAYLIKE_MIN_AMOUNT_TIP"/>
+                <field name="max_amount" type="text" label="VMPAYMENT_PAYLIKE_MAX_AMOUNT"
+                       description="VMPAYMENT_PAYLIKE_MAX_AMOUNT_TIP"/>
+                <field name="bootstrap" type="list" label="VMPAYMENT_PAYLIKE_DISABLE_BOOTSTRAP" default="0"
+                       description="VMPAYMENT_PAYLIKE_DISABLE_BOOTSTRAP_DESCRIPTION">
+                    <option value="0">JNO</option>
+                    <option value="1">JYES</option>
+                </field>
             </fieldset>
         </fields>
     </vmconfig>

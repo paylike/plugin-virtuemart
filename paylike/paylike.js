@@ -3,90 +3,66 @@ paylikeSubmitHandler();
 jQuery(function() {
 
 	jQuery("#afterOrderPaylike").click(function() {
-		popup(function(r) {
+		popup(function(r,datas) {
 			jQuery(".vm-order-done").show();
 			jQuery('#myModal .modal-footer button').trigger('click');
-			postData(r.transaction.id);
+			postData(r.transaction.id,datas.paymentmethod_id);
 		});
 	});
 });
 
 function popup(callback) {
-	var key = get_api_key();
-	var paylike = Paylike(key);
-	var pCurrency = jQuery("[name=paylikeCurrency]").val();
-	var pAmount = jQuery("[name=paylikePrice]").val();
-	var paylikeEmail = jQuery("[name=paylikeEmail]").val();
-	var paylikeName = jQuery("[name=paylikeName]").val();
-	var paylikePhone = jQuery("[name=paylikePhone]").val();
-	var paylikeAddress = jQuery("[name=paylikeAddress]").val();
-	var paylikeIp = jQuery("[name=paylikeIp]").val();
-	var paylikePlatformName = jQuery("[name=paylikePlatformName]").val();
-	var paylikeLocale = jQuery("[name=paylikeLocale]").val();
-	var paylikePlatformVersion = jQuery("[name=paylikePlatformVersion]").val();
-	var paylikeEcommerce = jQuery("[name=paylikeEcommerce]").val();
-	var paylikeEcommerceVersion = jQuery("[name=paylikeEcommerceVersion]").val();
-	var paylikePopupTitle = jQuery("[name=paylikePopupTitle]").val();
+	var datas = get_api_info();
+	var paylike = Paylike(datas.publicKey);
 	var virtuemartOrderId = jQuery("[name=virtuemart_order_id]").val();
 	data = {};
 	i = 0;
 	k = 0;
-	jQuery("[name='paylikeProductId[]']").each(function() {
-		data[k] = Array();
-		data[k]["Id"] = jQuery(this).val();
-		k++;
-	});
-	jQuery("[name='paylikeProductName[]']").each(function() {
-		data[i]["Name"] = jQuery(this).val();
-		i++;
-	});
-	j = 0;
+	// jQuery("[name='paylikeProductId[]']").each(function() {
+		// data[k] = Array();
+		// data[k]["Id"] = jQuery(this).val();
+		// k++;
+	// });
+	// jQuery("[name='paylikeProductName[]']").each(function() {
+		// data[i]["Name"] = jQuery(this).val();
+		// i++;
+	// });
+	// j = 0;
 
-	jQuery("[name='paylikeQuantity[]']").each(function() {
-		data[j]["Qty"] = jQuery(this).val();
-		j++;
-	});
+	// jQuery("[name='paylikeQuantity[]']").each(function() {
+		// data[j]["Qty"] = jQuery(this).val();
+		// j++;
+	// });
 
 	paylike.popup({
-		title: paylikePopupTitle,
-		currency: pCurrency,
-		amount: pAmount,
-		locale: paylikeLocale,
+		title: datas.popupTitle,
+		currency: datas.currency,
+		amount: datas.amount,
+		locale: datas.locale,
 		custom: {
 			orderNo: virtuemartOrderId,
-			products: [data],
-			customer: {
-				name: paylikeName,
-				email: paylikeEmail,
-				phoneNo: paylikePhone,
-				address: paylikeAddress,
-				IP: paylikeIp
-			},
-			platform: {
-				name: paylikePlatformName,
-				version: paylikePlatformVersion
-			},
-			ecommerce: {
-				name: paylikeEcommerce,
-				version: paylikeEcommerceVersion
-			},
-			paylikePluginVersion: '1.1.3'
+			products: datas.products,
+			customer: datas.customer,
+			platform: datas.platform,
+			ecommerce: datas.ecommerce,
+			paylikePluginVersion: datas.version,
+			paylikeID : datas.paylikeID
 		}
 	}, function(err, r) {
 		if (r != undefined) {
-
-			var paylikeCaptureMode = jQuery("[name=paylikeCaptureMode]").val();
-			var paylikePaymentMethod = jQuery("[name=paylikePaymentMethod]").val();
-			jQuery("[name=transactionId]").val(r.transaction.id);
-			formData = jQuery("#capturePayment").serialize();
-			var paylikeBase = jQuery("[name=paylikeBase]").val();
+			var payData = {
+					'paymentType' : 'captureTransactionFull',
+					'transactionId' : r.transaction.id,
+					'virtuemart_paymentmethod_id' : datas.paymentmethod_id,
+				}
 			jQuery.ajax({
 				type: "POST",
-				url: paylikeBase + "index.php?option=com_virtuemart&view=plugin&type=vmpayment&name=paylike&format=ajax&virtuemart_paymentmethod_id=" + paylikePaymentMethod + "&" + formData + "&paylikeCaptureMode=" + paylikeCaptureMode + "&transactionId=" + r.transaction.id,
+				url: vmSiteurl + "index.php?option=com_virtuemart&view=plugin&type=vmpayment&name=paylike&format=ajax",
 				async: false,
-				data: "",
+				data: payData,
 				success: function(e) {
-					callback(r);
+					console.log('captureTransactionFull',e,r);
+					callback(r,datas);
 				}
 			});
 		}
@@ -95,16 +71,34 @@ function popup(callback) {
 
 function get_api_key() {
 	var paylikePaymentMethod = jQuery("[name=paylikePaymentMethod]").val();
-	var paylikeBase = jQuery("[name=paylikeBase]").val();
 	var s = "";
 	jQuery.ajax({
 		type: "POST",
-		url: paylikeBase + "index.php?option=com_virtuemart&view=plugin&type=vmpayment&name=paylike&format=ajax&virtuemart_paymentmethod_id=" + paylikePaymentMethod,
+		url: vmSiteurl + "index.php?option=com_virtuemart&view=plugin&type=vmpayment&name=paylike&format=ajax&virtuemart_paymentmethod_id=" + paylikePaymentMethod,
 		async: false,
 		data: "",
 		success: function(e) {
+			
+			console.log(e);
 			s = e
 		}
+	});
+	return s
+}
+function get_api_info() {
+	var methodId  = jQuery("[name=virtuemart_paymentmethod_id]:checked").val();
+	if(typeof (methodId) === "undefined") methodId = vmPaylike.methodId;
+	var s = "";
+	jQuery.ajax({
+		type: "POST",
+		url: vmPaylike.site + "index.php?option=com_virtuemart&view=plugin&type=vmpayment&name=paylike&format=ajax&virtuemart_paymentmethod_id=" + methodId,
+		async: false,
+		data: "",
+		success: function(e) {
+			s = e;
+			console.log(s);
+		},
+        dataType: "json"
 	});
 	return s
 }
@@ -116,16 +110,31 @@ function paylikeSubmitHandler() {
 		if (name !== 'confirm') {
 			return true;
 		}
-		console.log(event.target);
+		
 		var methodId = jQuery("[name=virtuemart_paymentmethod_id]:checked").val();
-		var paylikePaymentMethod = jQuery("[name=paylikePaymentMethod]").val();
+		if (!vmPaylike.method.hasOwnProperty(methodId)) {
+			//in case we have no methods, then use default
+			if(jQuery("[name=virtuemart_paymentmethod_id]").length == 0) {
+				methodId = vmPaylike.methodId;
+				console.log(methodId + " use default");
+			} else console.log(methodId + "not found");
+		}
+		var data = vmPaylike.method[methodId];
 
 		var paylikeMode = jQuery("[name=paylikeMode]").val();
 		var payment_sent = $submit.hasClass('payment_sent');
 		var payment_after = $submit.hasClass('payment_after');
-		if (methodId !== paylikePaymentMethod || payment_sent || payment_after) {
+		if (payment_sent || payment_after) {
 			return true;
 		}
+
+		jQuery(this).vm2front('stopVmLoading');
+		jQuery('#checkoutFormSubmit').attr('disabled',false)
+			.removeClass( 'vm-button' )
+			.addClass( 'vm-button-correct' );
+		var name = jQuery('#checkoutFormSubmit').attr('name');
+		jQuery('#checkoutForm').find('input:hidden[name="'+name+'"]').remove();
+		console.log(name);
 		event.preventDefault();
 		if (paylikeMode == 'after') {
 			$submit.addClass("payment_after");
@@ -186,11 +195,10 @@ jQuery(document).ready(function() {
 			} else {
 				dataToSendForRefundHalf = JSON.stringify(dataToSendForRefundHalf);
 			}
-			var paylikeBase = jQuery("[name=paylikeBase]").val();
 			if (i > 0) {
 				jQuery.ajax({
 					type: "POST",
-					url: paylikeBase + "index.php?option=com_virtuemart&view=plugin&type=vmpayment&name=paylike&format=ajax&CapturePayment=true" + "&dataToSendForComplete=" + dataToSendForComplete + "&dataToSendForRefund=" + dataToSendForRefund + "&dataToSendForRefundHalf=" + dataToSendForRefundHalf,
+					url: vmSiteurl + "index.php?option=com_virtuemart&view=plugin&type=vmpayment&name=paylike&format=ajax&CapturePayment=true" + "&dataToSendForComplete=" + dataToSendForComplete + "&dataToSendForRefund=" + dataToSendForRefund + "&dataToSendForRefundHalf=" + dataToSendForRefundHalf,
 					async: false,
 					data: "",
 					success: function(e) {
@@ -205,20 +213,15 @@ jQuery(document).ready(function() {
 	}
 });
 
-function postData(transactId) {
-	var paylikePaymentMethod = jQuery("[name=paylikePaymentMethod]").val();
-	var pAmount = jQuery("[name=paylikePrice]").val();
-	var paylikeTitle = jQuery("[name=paylikeTitle]").val();
-	var order_number = jQuery("[name=order_number]").val();
+function postData(transactionId,methodId) {
 	var virtuemart_order_id = jQuery("[name=virtuemart_order_id]").val();
-	var transactionId = transactId;
 	jQuery.ajax({
 		type: "POST",
-		url: "index.php?option=com_virtuemart&view=plugin&type=vmpayment&name=paylike&format=ajax&save=1&virtuemart_paymentmethod_id=" + paylikePaymentMethod + "&pAmount=" + pAmount + "&paylikeTitle=" + paylikeTitle + "&order_number=" + order_number + "&virtuemart_order_id=" + virtuemart_order_id + "&transactionId=" + transactionId,
+		url: vmSiteurl + "index.php?option=com_virtuemart&view=plugin&type=vmpayment&name=paylike&format=ajax&save=1&transactionId=" + transactionId+"&virtuemart_paymentmethod_id="+methodId+"&virtuemart_order_id="+virtuemart_order_id,
 		async: false,
 		data: "",
 		success: function(e) {
-
+			
 		}
 	});
 }
