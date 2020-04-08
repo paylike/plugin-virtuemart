@@ -70,7 +70,7 @@ function popup(callback) {
 				name: paylikeEcommerce,
 				version: paylikeEcommerceVersion
 			},
-			paylikePluginVersion: '1.1.2'
+			paylikePluginVersion: '1.1.3'
 		}
 	}, function(err, r) {
 		if (r != undefined) {
