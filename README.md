@@ -5,6 +5,10 @@ available by a user.
 
 Released under the GNU V2 license: http://www.gnu.org/licenses/gpl-2.0.html GNU/GPL
 
+## Important
+
+Version `2.*` is not backward compatible with version `1.*` . You need to remove the extension before installing `2.*` . Make sure old orders are all processed before installing the new version. 
+
 ## Supported VirtueMart versions
 
 * The plugin has been tested with most versions of Virtuemart at every iteration. We recommend using the latest version of Virtuemart, but if that is not possible for some reason, test the plugin with your Virtuemart version and it would probably function properly. 
