@@ -3,7 +3,7 @@
 This plugin is *not* developed or maintained by Paylike but kindly made
 available by a user.
 
-Released under the GPL V3 license: https://opensource.org/licenses/GPL-3.0
+Released under the GNU V2 license: http://www.gnu.org/licenses/gpl-2.0.html GNU/GPL
 
 ## Supported VirtueMart versions
 
