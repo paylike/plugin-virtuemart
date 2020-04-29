@@ -1,5 +1,5 @@
 paylikeSubmitHandler();
-
+checkoutFormbtn ='checkout';
 jQuery(function() {
 
 	jQuery("#afterOrderPaylike").click(function() {
@@ -8,6 +8,18 @@ jQuery(function() {
 			jQuery('#myModal .modal-footer button').trigger('click');
 			postData(r.transaction.id,datas.paymentmethod_id);
 		});
+	});
+	jQuery('#checkoutForm').on('click',function(e){
+		var $btn = '';
+		if(e.target.type != 'submit') {
+			$btn = jQuery(e.target).parent();
+		} else $btn = jQuery(e.target);
+		if( $btn.attr('type') == 'submit') {
+			checkoutFormbtn = $btn.attr('name');
+			//.is('[type="submit"]');
+			//checkoutFormbtn = jQuery(this).attr('name');
+			console.log(checkoutFormbtn);
+		}
 	});
 });
 
@@ -40,6 +52,7 @@ function popup(callback) {
 		amount: datas.amount,
 		locale: datas.locale,
 		custom: {
+			orderId: datas.orderId,
 			orderNo: virtuemartOrderId,
 			products: datas.products,
 			customer: datas.customer,
@@ -60,9 +73,10 @@ function popup(callback) {
 				url: vmSiteurl + "index.php?option=com_virtuemart&view=plugin&type=vmpayment&name=paylike&format=ajax",
 				async: false,
 				data: payData,
-				success: function(e) {
-					console.log('captureTransactionFull',e,r);
-					callback(r,datas);
+				success: function(txt) {
+					console.log('captureTransactionFull',txt);
+					// console.log('captureTransactionFull',e,r);
+					if(txt =='1') callback(r,datas);
 				}
 			});
 		}
@@ -104,13 +118,15 @@ function get_api_info() {
 }
 
 function paylikeSubmitHandler() {
+	var $Form = jQuery('#checkoutForm');
+
 	jQuery(document).on('submit', '#checkoutForm', function(event) {
-		var $submit = jQuery('#checkoutFormSubmit');
-		var name = $submit.attr('name');
-		if (name !== 'confirm') {
+		var $submit = jQuery('#checkoutFormSubmit'),
+			name = $submit.attr('name');
+
+		if (name !== 'confirm' || checkoutFormbtn !=='checkout') {
 			return true;
 		}
-		
 		var methodId = jQuery("[name=virtuemart_paymentmethod_id]:checked").val();
 		if (!vmPaylike.method.hasOwnProperty(methodId)) {
 			//in case we have no methods, then use default
@@ -129,10 +145,10 @@ function paylikeSubmitHandler() {
 		}
 
 		jQuery(this).vm2front('stopVmLoading');
-		jQuery('#checkoutFormSubmit').attr('disabled',false)
+		$submit.attr('disabled',false)
 			.removeClass( 'vm-button' )
 			.addClass( 'vm-button-correct' );
-		var name = jQuery('#checkoutFormSubmit').attr('name');
+		var name = $submit.attr('name');
 		jQuery('#checkoutForm').find('input:hidden[name="'+name+'"]').remove();
 		console.log(name);
 		event.preventDefault();
@@ -148,8 +164,7 @@ function paylikeSubmitHandler() {
 			return false;
 		}
 		popup(function() {
-			jQuery('#checkoutFormSubmit').addClass("payment_sent");
-			jQuery('#checkoutFormSubmit').trigger("click");
+			$submit.addClass("payment_sent").trigger("click");
 		});
 		return false;
 	});
@@ -220,8 +235,8 @@ function postData(transactionId,methodId) {
 		url: vmSiteurl + "index.php?option=com_virtuemart&view=plugin&type=vmpayment&name=paylike&format=ajax&save=1&transactionId=" + transactionId+"&virtuemart_paymentmethod_id="+methodId+"&virtuemart_order_id="+virtuemart_order_id,
 		async: false,
 		data: "",
-		success: function(e) {
-			
+		success: function(data) {
+			if(data !='1') alert('error :'+data);
 		}
 	});
 }

@@ -1,337 +1,229 @@
 <?php
 
-include_once( 'Paylike/Client.php' );
-include_once( 'utils/PaylikeCurrency.php' );
+defined ('_JEXEC') or die('Restricted access');
+if ( ! class_exists(  'Paylike\\Client' ) ) {
+	include_once( __DIR__ .'/lib/Client.php' );
+} 
+if ( ! class_exists( 'PaylikeCurrency' ) ) {
+	include_once( __DIR__ .'/lib/PaylikeCurrency.php' );
+} 
 if ( ! class_exists( 'vmPSPlugin' ) ) {
 	require( JPATH_VM_PLUGINS . DS . 'vmpsplugin.php' );
-}
+} 
+/**
+ * @version $Id: paylike.php,v 1.4 2005/05/27 19:33:57 ei
+ *
+ * a special type of 'cash on delivey':
+ * @author Max Milbers, Valérie Isaksen
+ * @version $Id: paylike.php 5122 2011-12-18 22:24:49Z alatak $
+ * @package VirtueMart
+ * @subpackage payment
+ * @copyright Copyright (c) 2004 - 2019 VirtueMart Team. All rights reserved.
+ * @license http://www.gnu.org/copyleft/gpl.html GNU/GPL, see LICENSE.php
+ * VirtueMart is free software. This version may have been modified pursuant
+ * to the GNU General Public License, and as distributed it includes or
+ * is derivative of works licensed under the GNU General Public License or
+ * other free or open source software licenses.
+ * See /administrator/components/com_virtuemart/COPYRIGHT.php for copyright notices and details.
+ *
+ * http://virtuemart.net
+ */
 
 class plgVmPaymentPaylike extends vmPSPlugin {
+	
+	public $version = '2.0.0.3';
+	static $IDS = array();
+	protected $_isInList = false;
+	function __construct (& $subject, $config) {
 
-	// instance of class
-	public static $_this = false;
-	public $version = '1.1.4';
-	function __construct( & $subject = false, $config = false ) {
-
-		parent::__construct( $subject, $config );
-		$this->id = array();
-		$this->paylikeCurrency = new PaylikeCurrency();
-		
-		$this->_loggable = true;
-		$this->tableFields = array_keys( $this->getTableSQLFields() );
+		parent::__construct ($subject, $config);
+		// 		vmdebug('Plugin stuff',$subject, $config);
+		$this->_loggable = TRUE;
+		$this->tableFields = array_keys ($this->getTableSQLFields ());
 		$this->_tablepkey = 'id';
 		$this->_tableId = 'id';
-		$this->addOptionForOrderStatus(); // add Refund half option to database
-
-		$varsToPush = array(
-			'title'              => array( '', 'text' ),
-			'active'             => array( '', 'text' ),
-			'test_mode'          => array( '', 'int' ),
-			'description'        => array( '', 'text' ),
-			'live_api_key'       => array( '', 'char' ),
-			'live_public_key'    => array( '', 'char' ),
-			'test_api_key'       => array( '', 'char' ),
-			'test_public_key'    => array( '', 'char' ),
-			'popup_title'        => array( '', 'char' ),
-			'checkout_mode'      => array( '', 'char' ),
-			'capture_mode'       => array( '', 'char' ),
-			'card'               => array( '', 'char' ),
-			'mastercard'         => array( '', 'char' ),
-			'maestro'            => array( '', 'char' ),
-			'visa'               => array( '', 'char' ),
-			'visaelectron'       => array( '', 'char' ),
-			'status_capture'     => array( '', 'char' ),
-			'status_success'     => array( '', 'char' ),
-			'status_refunded'    => array( '', 'char' ),
-			'delay_order_status' => array( '', 'char' ),
-			'cost_per_transaction'    => array( '', 'int' ),
-			'cost_min_transaction'    => array( '', 'int' ),
-			'cost_percent_total'      => array( '', 'int' ),
-			'tax_id'                  => array( 0, 'int' ),
-			'bootstrap'                  => array( 0, 'int' )
-		);
-		if(method_exists($this,'addVarsToPushCore')) $this->addVarsToPushCore($varsToPush, 1);
-		/* save setting params to database */
-		$this->setConfigParameterable( $this->_configTableFieldName, $varsToPush );
-		$this->setConvertable(array('cost_per_transaction','cost_min_transaction'));
-		$this->setConvertDecimal(array('cost_per_transaction','cost_min_transaction','cost_percent_total'));
+		$varsToPush = $this->getVarsToPush ();
+		$this->addVarsToPushCore($varsToPush,1);
+		$this->setConfigParameterable ($this->_configTableFieldName, $varsToPush);
+		$this->setConvertable(array('min_amount','max_amount','cost_per_transaction','cost_min_transaction'));
+		$this->setConvertDecimal(array('min_amount','max_amount','cost_per_transaction','cost_min_transaction','cost_percent_total'));
 	}
 
-	/* create a new table for paylike transaction id and order detail */
-	public function getVmPluginCreateTableSQL() {
-		return $this->createTableSQL( 'Payment PAYLIKE Table' );
+	/**
+	 * Create the table for this plugin if it does not yet exist.
+	 *
+	 * @author Valérie Isaksen
+	 */
+	public function getVmPluginCreateTableSQL () {
+
+		return $this->createTableSQL ('Payment Paylike Table');
 	}
 
-	function getTableSQLFields() {
+	/**
+	 * Fields to create the payment table
+	 *
+	 * @return string SQL Fileds
+	 */
+	function getTableSQLFields () {
+
 		$SQLfields = array(
-			'id'                          => 'int(11) UNSIGNED NOT NULL AUTO_INCREMENT',
+			'id'                          => 'int(1) UNSIGNED NOT NULL AUTO_INCREMENT',
 			'virtuemart_order_id'         => 'int(1) UNSIGNED',
-			'order_number'                => ' char(64)',
+			'order_number'                => 'char(64)',
 			'virtuemart_paymentmethod_id' => 'mediumint(1) UNSIGNED',
 			'payment_name'                => 'varchar(5000)',
-			'amount'                      => 'decimal(15,5) NOT NULL DEFAULT \'0.00000\'',
+			'payment_order_total'         => 'decimal(15,5) NOT NULL DEFAULT \'0.00000\'',
 			'payment_currency'            => 'char(3)',
-			'status'                      => 'varchar(225)',
-			'mode'                        => 'varchar(225)',
-			'productinfo'                 => 'text',
-			'txnid'                       => 'varchar(29)',
+			'email_currency'              => 'char(3)',
 			'cost_per_transaction'        => 'decimal(10,2)',
 			'cost_min_transaction'        => 'decimal(10,2)',
 			'cost_percent_total'          => 'decimal(10,2)',
 			'tax_id'                      => 'smallint(1)',
-			'status_pending'              => 'char(3)',
+			'paylike_data'                => 'varchar(65000)'
+			
 		);
 
 		return $SQLfields;
 	}
 
-	/* check if module is enabled or not before showing option in frontend */
 	/**
-	 * Check if the payment conditions are fulfilled for this payment method
 	 *
-	 * @author: Valerie Isaksen
 	 *
-	 * @param $cart_prices: cart prices
-	 * @param $payment
-	 * @return true: if the conditions are fulfilled, false otherwise
-	 *
+	 * @author Valérie Isaksen
 	 */
-	protected function checkConditions ($cart, $method, $cart_prices) {
+	function plgVmConfirmedOrder ($cart, $order) {
 
-		$view = vRequest::get('view');
-		if($view !== 'plugin') {
-			$method->min_amount = (float)str_replace(',','.',$method->min_amount);
-			$method->max_amount = (float)str_replace(',','.',$method->max_amount);
-			$amount = $this->getCartAmount($cart_prices);
-			$address = (($cart->ST == 0) ? $cart->BT : $cart->ST);
-			$valid = false;
-			if($this->_toConvert){
-				$this->convertToVendorCurrency($method);
-			}
-			//vmdebug('standard checkConditions',  $amount, $cart_prices['salesPrice'],  $cart_prices['salesPriceCoupon']);
-			$amount_cond = ($amount >= $method->min_amount AND $amount <= $method->max_amount
-				OR
-				($method->min_amount <= $amount AND ($method->max_amount == 0)));
-			if (!$amount_cond) {
-				return FALSE;
-			}
-			$countries = array();
-			if (!empty($method->countries)) {
-				if (!is_array ($method->countries)) {
-					$countries[0] = $method->countries;
-				} else {
-					$countries = $method->countries;
-				}
-			}
-
-			// probably did not gave his BT:ST address
-			if (!is_array ($address)) {
-				$address = array();
-				$address['virtuemart_country_id'] = 0;
-			}
-
-			if (!isset($address['virtuemart_country_id'])) {
-				$address['virtuemart_country_id'] = 0;
-			}
-			if (count ($countries) == 0 || in_array ($address['virtuemart_country_id'], $countries) ) {
-				$valid = TRUE;
-			} else return FALSE;
-
-			
-
-			/* check if module is active */
-			// vmdebug($method);
-			require_once(__DIR__.'/utils/asset.php');
-			if ( ! in_array( $method->virtuemart_paymentmethod_id, $this->id ) ) {
-				array_push( $this->id, $method->virtuemart_paymentmethod_id );
-				/* if sandbox mode */
-				if ( $method->test_mode == 1 ) {
-					$apiKey = $method->test_api_key;
-					$publicKey = $method->test_public_key;
-					$mode = "test";
-				} /* if live mode */
-				else {
-					$apiKey = $method->live_api_key;
-					$publicKey = $method->live_public_key;
-					$mode = "live";
-				}
-				
-
-				/* load params  to send in Paylike */
-				$data = new stdClass();
-				$data->id = $method->virtuemart_paymentmethod_id;
-				 ?>
-				<script>
-				vmPaylike.method[<?php echo $method->virtuemart_paymentmethod_id ?>] = <?php echo json_encode($data); ?>;
-				</script>
-			<?php 
-				}
-				
-				vmdebug('Paylike checkConditions', $mode);
-		}
-		// return parent::checkConditions($cart, $method, $cart_prices);
-		return true;
-	}
-	function getCosts (VirtueMartCart $cart, $method, $cart_prices) {
-
-			if (preg_match ('/%$/', $method->cost_percent_total)) {
-				$cost_percent_total = substr ($method->cost_percent_total, 0, -1);
-			} else {
-				$cost_percent_total = $method->cost_percent_total;
-			}
-			return ($method->cost_per_transaction + ($cart_prices['salesPrice'] * $cost_percent_total * 0.01));
-	}
-	
-	function plgVmOnStoreInstallPaymentPluginTable( $jplugin_id ) {
-		return $this->onStoreInstallPluginTable( $jplugin_id );
-	}
-	
-	/*
-	* plgVmonSelectedCalculatePricePayment
-	* Calculate the price (value, tax_id) of the selected method
-	* It is called by the calculator
-	* This function does NOT to be reimplemented. If not reimplemented, then the default values from this function are taken.
-	* @cart: VirtueMartCart the current cart
-	* @cart_prices: array the new cart prices
-	* @return null if the method was not selected, false if the shiiping rate is not valid any more, true otherwise
-	*
-	*
-	*/
-	public function plgVmonSelectedCalculatePricePayment (VirtueMartCart $cart, array &$cart_prices, &$cart_prices_name) {
-		return $this->onSelectedCalculatePrice ($cart, $cart_prices, $cart_prices_name);
-	}
-	
-	/* On Select Payment Method on frontend, show related detail */
-	public function plgVmOnSelectCheckPayment( VirtueMartCart $cart ) {
-		return $this->OnSelectCheck( $cart );
-	}
-
-	/*Show list of payment methods */
-	public function plgVmDisplayListFEPayment( VirtueMartCart $cart, $selected = 0, &$htmlIn ) {
-		//$htmlIn ="dsgsgsgsd";
-		return $this->displayListFE( $cart, $selected, $htmlIn );
-	}
-
-
-
-	public function plgVmOnShowOrderFEPayment( $virtuemart_order_id, $virtuemart_paymentmethod_id, &$payment_name ) {
-		return $this->onShowOrderFE( $virtuemart_order_id, $virtuemart_paymentmethod_id, $payment_name );
-	}
-
-	/* if single payment method enable, show automatically selected paylike payment method */
-	function plgVmOnCheckAutomaticSelectedPayment( VirtueMartCart $cart, array $cart_prices = array(), &$paymentCounter ) {
-		return $this->onCheckAutomaticSelected( $cart, $cart_prices, $paymentCounter );
-	}
-
-	function plgVmonShowOrderPrintPayment( $order_number, $method_id ) {
-		return $this->onShowOrderPrint( $order_number, $method_id );
-	}
-
-	function plgVmDeclarePluginParamsPayment( $name, $id, &$data ) {
-		return $this->declarePluginParams( 'payment', $name, $id, $data );
-	}
-
-	protected function renderPluginName( $plugin ) {
-		// echo "<pre>";print_r($card);
-		$return = "<div class='paylike-wrapper' style='display: inline-block'><div class='paylike_title' >" . $plugin->title . "</div>";
-		$return .= "<div class='payment_logo' >";
-		if(!empty($plugin->card)) $card = implode( "~", $plugin->card );
-		$version = explode( ".", $this->getJoomlaVersions() );
-		$virtVersion = $this->getVirtuemartVersions();
-		if ( ( $version[0] >= 3 ) || ( $virtVersion >= 2.7 && $version[0] < 3 ) ) {
-			$path = JURI::root();
-		} else {
-			$path = JURI::root()."plugins/vmpayment/paylike/images/";
-		}
-
-		if (empty($card )) {
-			$card = 'mastercard,maestro,visa,visaelectron';
-		}
-
-		if ( $plugin->mastercard != "" && strpos( $card, "mastercard" ) !== false ) {
-			$return .= "<img src='" . $path . $plugin->mastercard . "' />";
-		}
-		if ( $plugin->maestro != "" && strpos( $card, "maestro" ) !== false ) {
-			$return .= "<img src='" . $path . $plugin->maestro . "' />";
-		}
-		if ( $plugin->visa != "" && strpos( $card, "visa" ) !== false ) {
-			$return .= "<img src='" . $path . $plugin->visa . "' />";
-		}
-		if ( $plugin->visaelectron != "" && strpos( $card, "visaelectron" ) !== false ) {
-			$return .= "<img src='" . $path . $plugin->visaelectron . "' />";
-		}
-		$return .= "</div></div>";
-		$return .= '<div class="paylike_desc" >' . $plugin->description . '</div>';
-		if ( $plugin->test_mode == 1 ) {
-			$return .= '<div class="payment_box payment_method_paylike"><p>TEST MODE ENABLED. In test mode, you can use the card number 4100 0000 0000 0000 with any CVC and a valid expiration date. "<a href="https://github.com/paylike/sdk">See Documentation</a>".</p></div>';
-		}
-
-
-		return $return;
-	}
-
-	function plgVmConfirmedOrder( $cart, $order ) {
-		$BT = $order['details']['BT'];
-		if (!($method = $this->getVmPluginMethod ($BT->virtuemart_paymentmethod_id))) {
+		if (!($method = $this->getVmPluginMethod ($order['details']['BT']->virtuemart_paymentmethod_id))) {
 			return NULL; // Another method was selected, do nothing
 		}
 		if (!$this->selectedThisElement ($method->payment_element)) {
 			return FALSE;
 		}
-		$currency_model = VmModel::getModel( 'currency' );
-		$currency_id = $order["details"]["BT"]->order_currency;
-		$displayCurrency = $currency_model->getCurrency( $currency_id );
-		$currency = $displayCurrency->currency_symbol;
-		$currency_code_3 = $displayCurrency->currency_code_3;
-		
-		$totalInPaymentCurrency = vmPSPlugin::getAmountInCurrency($BT->order_total,$method->payment_currency);
 
-		//store order payment 
-		$dbValues = array();
-		$dbValues['payment_name'] = $method->title;
-		if ( $plugin->test_mode == 1 ) {
-			$dbValues['payment_name'] .= '<div class="payment_box payment_method_paylike"><p>TEST MODE ENABLED. In test mode, you can use the card number 4100 0000 0000 0000 with any CVC and a valid expiration date. "<a href="https://github.com/paylike/sdk">See Documentation</a>".</p></div>';
+		vmLanguage::loadJLang('com_virtuemart',true);
+		vmLanguage::loadJLang('com_virtuemart_orders', TRUE);
+
+		$this->getPaymentCurrency($method, $order['details']['BT']->payment_currency_id);
+		$currency_code_3 = shopFunctions::getCurrencyByID($method->payment_currency, 'currency_code_3');
+		$email_currency = $this->getEmailCurrency($method);
+
+		$totalInPaymentCurrency = vmPSPlugin::getAmountInCurrency($order['details']['BT']->order_total,$method->payment_currency);
+
+		if (!empty($method->payment_info)) {
+			$lang = JFactory::getLanguage ();
+			if ($lang->hasKey ($method->payment_info)) {
+				$method->payment_info = vmText::_ ($method->payment_info);
+			}
 		}
-		$dbValues['order_number'] = $BT->order_number;
-		$dbValues['virtuemart_paymentmethod_id'] = $BT->virtuemart_paymentmethod_id;
+		$transactionId ='';
+		//verify the session
+		if($method->checkout_mode === 'before') {
+			$session = JFactory::getSession();
+			$transactionId = $session->get( 'paylike.transactionId','');
+			$hasError = true;
+			if($transactionId) {
+				$this->setKey($method);
+				// verify transaction amount + currency
+				$response = \Paylike\Transaction::fetch( $transactionId);
+				$transactionAmount = (int)$response['transaction']['amount'];
+				$transactionCurrency = $response['transaction']['currency'];
+				
+				$paylikeCurrency = new PaylikeCurrency();
+				$price = floatval( str_replace( ",", "", $order['details']['BT']->order_total ) );
+				$this->getPaymentCurrency( $method );
+				$currency = shopFunctions::getCurrencyByID($method->payment_currency, 'currency_code_3');
+				$priceInCents = ceil( round( $price, 3 ) * $paylikeCurrency->getPaylikeCurrencyMultiplier( $currency ) );
+				if($transactionAmount == $priceInCents && $transactionCurrency == $currency) {
+					$hasError = false;
+				}
+			}
+			// return to cart and dont save transation values, if we dont get the right values;
+			if($hasError) {
+				$msg = 'Paylike Transaction not found '.$transactionId;
+				$app = JFactory::getApplication();
+				$app->redirect(JRoute::_('index.php?option=com_virtuemart&view=cart'), $msg);
+			}
+		}
+		$dbValues['payment_name'] = $this->renderPluginName ($method);
+		$dbValues['order_number'] = $order['details']['BT']->order_number;
+		$dbValues['virtuemart_paymentmethod_id'] = $order['details']['BT']->virtuemart_paymentmethod_id;
 		$dbValues['cost_per_transaction'] = $method->cost_per_transaction;
 		$dbValues['cost_min_transaction'] = $method->cost_min_transaction;
 		$dbValues['cost_percent_total'] = $method->cost_percent_total;
 		$dbValues['payment_currency'] = $currency_code_3;
-		$dbValues['amount'] = $totalInPaymentCurrency['value'];
+		$dbValues['email_currency'] = $email_currency;
+		$dbValues['payment_order_total'] = $totalInPaymentCurrency['value'];
 		$dbValues['tax_id'] = $method->tax_id;
-		$dbValues['mode'] = $method->checkout_mode.' | '.$method->capture_mode;
-		$dbValues['txnid '] = $method->tax_id;
+		$dbValues['paylike_data'] = $transactionId;//before transaction has the ID
 		$this->storePSPluginInternalData ($dbValues);
-		$session = JFactory::getSession();
-		if ( $method->checkout_mode != "after" ) { ?>
-			<script type="text/javascript">
-						jQuery(window).load(function() {
-							setTimeout(function() {
-								jQuery("body").append('<input type="hidden" name="virtuemart_order_id" value="<?php echo $BT->virtuemart_order_id; ?>" /><input type="hidden" name="order_number" value="<?php echo $order["details"]["BT"]->order_number; ?>" />');
-								postData('<?php echo $session->get( 'transactionId' ); ?>','<?php echo $BT->virtuemart_paymentmethod_id; ?>');
-							}, 2000);
-						});
-			</script>
-			<?php
-		} else { ?>
-			<script type="text/javascript">
-						jQuery(window).load(function() {
-							setTimeout(function() {
-								jQuery("body").append('<button type="button" class="orderDetail" class="btn btn-info btn-lg" data-toggle="modal" data-target="#myModal" style="display:none;">Open Modal</button><div class="modal fade" id="myModal" role="dialog"> <div class="modal-dialog" style="text-align: left;"> <div class="modal-content">     <div class="modal-header"> <button type="button" class="close" data-dismiss="modal">&times;</button> <h4 class="modal-title">Pay for Order</h4> </div> <div class="modal-body" style="padding: 10px 30px;"> <p><div class="orderDetail"><ul class="order_details"><li class="order">Order number:<strong><?php echo $order["details"]["BT"]->order_number; ?></strong></li><li class="date">Date:<strong><?php echo date( "M d,Y", strtotime( $order["details"]["BT"]->created_on ) ); ?></strong></li><li class="total">Total:<strong><?php echo $currency . number_format( $order["details"]["BT"]->order_total, 2 ); ?></strong></li><li class="method">Payment method:<strong><?php echo $method->title; ?></strong></li><li><a href="javascript:void(0);" id="afterOrderPaylike" >Pay</a></li></ul></div></p> </div> <div class="modal-footer"> <button type="button" class="btn btn-default" data-dismiss="modal">Close</button></div></div> </div> </div><style>.modal-backdrop.fade.in{ opacity: .4;}#myModal { background: none;margin-left: auto;width: 100%;overflow: hidden;}</style><input type="hidden" name="virtuemart_order_id" value="<?php echo $order["details"]["BT"]->virtuemart_order_id; ?>" /><input type="hidden" name="order_number" value="<?php echo $order["details"]["BT"]->order_number; ?>" /><script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"><script src="<?php echo JURI::base(); ?>plugins/vmpayment/paylike/bootstrap.min.js"><\\/script>');
-								jQuery("#myModal").modal();
 
-								setTimeout(function() {
-									jQuery("body").append('<script src="<?php echo JURI::base(); ?>plugins/vmpayment/paylike/paylike.js"><\/script>');
-								}, 1000);
-							}, 2000);
-						});
-			</script>
-			<?php
+		$currency = CurrencyDisplay::getInstance ('', $order['details']['BT']->virtuemart_vendor_id);
+
+		$orderlink='';
+		$tracking = VmConfig::get('ordertracking','guests');
+		if($tracking !='none' and !($tracking =='registered' and empty($order['details']['BT']->virtuemart_user_id) )) {
+
+			$orderlink = 'index.php?option=com_virtuemart&view=orders&layout=details&order_number=' . $order['details']['BT']->order_number;
+			if ($tracking == 'guestlink' or ($tracking == 'guests' and empty($order['details']['BT']->virtuemart_user_id))) {
+				$orderlink .= '&order_pass=' . $order['details']['BT']->order_pass;
+			}
 		}
-		$cart->emptyCart();
-		$cart->removeCartFromSession();
+		//afterpaiment need specific render and scripts
+		if($method->checkout_mode === 'after') {
+			$html = $this->renderByLayout('pay_after', array(
+				'method'=>$method,
+				'cart'=>$cart,
+				'billingDetails' =>$order['details']['BT'],
+				'payment_name' => $dbValues['payment_name'],
+				'displayTotalInPaymentCurrency' => $totalInPaymentCurrency['display'],
+				'orderlink' =>$orderlink
+			));
+		} else {
+			
+			$html = $this->renderByLayout('order_done', array(
+				'method'=>$method,
+				'cart'=>$cart,
+				'billingDetails' =>$order['details']['BT'],
+				'payment_name' => $dbValues['payment_name'],
+				'displayTotalInPaymentCurrency' => $totalInPaymentCurrency['display'],
+				'orderlink' =>$orderlink
+			));
+			//before paiment display
+			//We delete the cart content
+			$cart->emptyCart ();
+			// and send Status email if needed
+			$details = $order['details']['BT'];
+			$order['order_status'] = $this->getNewStatus ($method);
+			$order['customer_notified'] = 1;
+			$order['comments'] = '';
+			$modelOrder = VmModel::getModel ('orders');
+			$modelOrder->updateStatusForOneOrder ($details->virtuemart_order_id, $order, TRUE);
+		}
+		vRequest::setVar ('html', $html);
+		return TRUE;
 	}
+
+	/*
+		 * Keep backwards compatibility
+		 * a new parameter has been added in the xml file
+		 */
+	function getNewStatus ($method) {
+		//instant payment directly capture
+		if($method->capture_mode === 'instant') {
+			if (isset($method->status_capture) and $method->status_capture!="") {
+				return $method->status_capture;
+			} else {
+				return 'S';
+			}
+		} else {
+			if (isset($method->status_success) and $method->status_success!="") {
+				return $method->status_success;
+			} else {
+				return 'C';
+			}
+		}
+	}
+
 	/**
 	 * Display stored payment data for an order
 	 *
@@ -350,158 +242,266 @@ class plgVmPaymentPaylike extends vmPSPlugin {
 		$html = '<table class="adminlist table">' . "\n";
 		$html .= $this->getHtmlHeaderBE ();
 		$html .= $this->getHtmlRowBE ('COM_VIRTUEMART_PAYMENT_NAME', $paymentTable->payment_name);
-		$html .= $this->getHtmlRowBE ('', $paymentTable->amount . ' ' . $paymentTable->payment_currency);
+		$html .= $this->getHtmlRowBE ('PAYLIKE_PAYMENT_TOTAL_CURRENCY', $paymentTable->payment_order_total . ' ' . $paymentTable->payment_currency);
 		if ($paymentTable->email_currency) {
-			$html .= $this->getHtmlRowBE ('STANDARD_EMAIL_CURRENCY', $paymentTable->email_currency );
+			$html .= $this->getHtmlRowBE ('PAYLIKE_EMAIL_CURRENCY', $paymentTable->email_currency );
 		}
+		$html .= $this->getHtmlRowBE ('Transaction', $paymentTable->paylike_data );
 		$html .= '</table>' . "\n";
 		return $html;
 	}
+
+
+
 	/*
-		Predefined function of Virtualmart to save selected setting as plugin parameters
-	*/
-	function plgVmSetOnTablePluginParamsPayment( $name, $id, &$table ) {
-		return $this->setOnTablePluginParams( $name, $id, $table );
+* We must reimplement this triggers for joomla 1.7
+*/
+
+	/**
+	 * Create the table for this plugin if it does not yet exist.
+	 * This functions checks if the called plugin is active one.
+	 * When yes it is calling the standard method to create the tables
+	 *
+	 * @author Valérie Isaksen
+	 *
+	 */
+	function plgVmOnStoreInstallPaymentPluginTable ($jplugin_id) {
+
+		return $this->onStoreInstallPluginTable ($jplugin_id);
 	}
 
-	function plgVmOnUpdateOrderPayment( $order, $old_order_status ) {
+	/**
+	 * This event is fired after the payment method has been selected. It can be used to store
+	 * additional payment info in the cart.
+	 *
+	 * @author Max Milbers
+	 * @author Valérie isaksen
+	 *
+	 * @param VirtueMartCart $cart: the actual cart
+	 * @return null if the payment was not selected, true if the data is valid, error message if the data is not vlaid
+	 *
+	 */
+	public function plgVmOnSelectCheckPayment (VirtueMartCart $cart, &$msg) {
 
-		if (!($method = $this->getVmPluginMethod ($order->virtuemart_paymentmethod_id))) {
+		return $this->OnSelectCheck ($cart);
+	}
+
+	/**
+	 * plgVmDisplayListFEPayment
+	 * This event is fired to display the pluginmethods in the cart (edit shipment/payment) for exampel
+	 *
+	 * @param object  $cart Cart object
+	 * @param integer $selected ID of the method selected
+	 * @return boolean True on succes, false on failures, null when this plugin was not selected.
+	 * On errors, JError::raiseWarning (or JError::raiseError) must be used to set a message.
+	 *
+	 * @author Valerie Isaksen
+	 * @author Max Milbers
+	 */
+	public function plgVmDisplayListFEPayment (VirtueMartCart $cart, $selected = 0, &$htmlIn) {
+		$this->_isInList = true;
+		return $this->displayListFE ($cart, $selected, $htmlIn);
+		
+	}
+
+	/*
+* plgVmonSelectedCalculatePricePayment
+* Calculate the price (value, tax_id) of the selected method
+* It is called by the calculator
+* This function does NOT to be reimplemented. If not reimplemented, then the default values from this function are taken.
+* @author Valerie Isaksen
+* @cart: VirtueMartCart the current cart
+* @cart_prices: array the new cart prices
+* @return null if the method was not selected, false if the shiiping rate is not valid any more, true otherwise
+*
+*
+*/
+
+	public function plgVmonSelectedCalculatePricePayment (VirtueMartCart $cart, array &$cart_prices, &$cart_prices_name) {
+
+		return $this->onSelectedCalculatePrice ($cart, $cart_prices, $cart_prices_name);
+	}
+
+	function plgVmgetPaymentCurrency ($virtuemart_paymentmethod_id, &$paymentCurrencyId) {
+
+		if (!($method = $this->getVmPluginMethod ($virtuemart_paymentmethod_id))) {
+			return NULL; // Another method was selected, do nothing
+		}
+		if (!$this->selectedThisElement ($method->payment_element)) {
+			return FALSE;
+		}
+		$this->getPaymentCurrency ($method);
+
+		$paymentCurrencyId = $method->payment_currency;
+		return;
+	}
+
+	/**
+	 * plgVmOnCheckAutomaticSelectedPayment
+	 * Checks how many plugins are available. If only one, the user will not have the choice. Enter edit_xxx page
+	 * The plugin must check first if it is the correct type
+	 *
+	 * @author Valerie Isaksen
+	 * @param VirtueMartCart cart: the cart object
+	 * @return null if no plugin was found, 0 if more then one plugin was found,  virtuemart_xxx_id if only one plugin is found
+	 *
+	 */
+	function plgVmOnCheckAutomaticSelectedPayment (VirtueMartCart $cart, array $cart_prices = array(), &$paymentCounter) {
+
+		return $this->onCheckAutomaticSelected ($cart, $cart_prices, $paymentCounter);
+	}
+
+	/**
+	 * This method is fired when showing the order details in the frontend.
+	 * It displays the method-specific data.
+	 *
+	 * @param integer $order_id The order ID
+	 * @return mixed Null for methods that aren't active, text (HTML) otherwise
+	 * @author Max Milbers
+	 * @author Valerie Isaksen
+	 */
+	public function plgVmOnShowOrderFEPayment ($virtuemart_order_id, $virtuemart_paymentmethod_id, &$payment_name) {
+
+		$this->onShowOrderFE ($virtuemart_order_id, $virtuemart_paymentmethod_id, $payment_name);
+	}
+	/**
+	 * @param $orderDetails
+	 * @param $data
+	 * @return null
+	 */
+
+	function plgVmOnUserInvoice ($orderDetails, &$data) {
+
+		if (!($method = $this->getVmPluginMethod ($orderDetails['virtuemart_paymentmethod_id']))) {
+			return NULL; // Another method was selected, do nothing
+		}
+		if (!$this->selectedThisElement ($method->payment_element)) {
 			return NULL;
 		}
-		// Another method was selected, do nothing
-		if ( ! $this->selectedThisElement( $method->payment_element ) ) {
-			return false;
+		//vmdebug('plgVmOnUserInvoice',$orderDetails, $method);
+
+		if (!isset($method->send_invoice_on_order_null) or $method->send_invoice_on_order_null==1 or $orderDetails['order_total'] > 0.00){
+			return NULL;
 		}
-		// vminfo('plgVmOnUpdateOrderPayment '.$method->payment_element.' '.$order->order_status);
-		//Load only when updating status to shipped
-		// var_dump($method); jexit();
-		if ($order->order_status != $method->status_capture 
-			&& $order->order_status != $method->status_success
-			&& $order->order_status != $method->status_refunded
-			
-			) {
-			// vminfo('Order_status not found '.$order->order_status.' in '.$method->status_capture.', '.$method->status_success.', '.$method->status_refunded );
-			return null;
+
+		if ($orderDetails['order_salesPrice']==0.00) {
+			$data['invoice_number'] = 'reservedByPayment_' . $orderDetails['order_number']; // Nerver send the invoice via email
 		}
-		// vminfo('Order_status change ',$order->order_status);
-		/* if testing mode */
-		if ( $method->test_mode == 1 ) {
-			$privateKey = $method->test_api_key ;
-			$publicKey = $method->test_public_key ;
-		} else /* if live mode */ {
-			$privateKey = $method->live_api_key ;
-			$publicKey = $method->live_public_key ;
+
+	}
+	/**
+	 * @param $virtuemart_paymentmethod_id
+	 * @param $paymentCurrencyId
+	 * @return bool|null
+	 */
+	function plgVmgetEmailCurrency($virtuemart_paymentmethod_id, $virtuemart_order_id, &$emailCurrencyId) {
+
+		if (!($method = $this->getVmPluginMethod($virtuemart_paymentmethod_id))) {
+			return NULL; // Another method was selected, do nothing
 		}
-		$orderDetail = $this->getAllOrderDetails( $order->order_number );
-		\Paylike\Client::setKey( $privateKey );
-		if ( ($order->order_status == $method->status_capture && $method->capture_mode == "delayed")
-			|| ($order->order_status == $method->status_success && $method->capture_mode == "instant") ) {
-			
-			$txtid = $orderDetail->txnid;
-			$response = \Paylike\Transaction::fetch( $txtid );
-			$amount = $response['transaction']['pendingAmount'];
-			$currency = $response['transaction']['currency'];
-			$data = array(
-				'amount'   => $amount,
-				'currency' => $currency
-			);
-			if ( $amount > 0 ) {
-				$response = \Paylike\Transaction::capture( $txtid, $data );
-			}
-		} else if ( $order->order_status == $method->status_refunded ) {
-			$txtid = $orderDetail->txnid;
-			$response = \Paylike\Transaction::fetch( $txtid );
-			/* refund payment if already captured */
-			if ( $response['transaction']['capturedAmount'] > 0 ) {
-				$amount = $response['transaction']['capturedAmount'];
-				$data = array(
-					'amount'     => $amount,
-					'descriptor' => ""
-				);
-				$response = \Paylike\Transaction::refund( $txtid, $data );
-			} else {
-				/* void payment if not already captured */
-				$data = array(
-					'amount' => $response['transaction']['amount']
-				);
-				$response = \Paylike\Transaction::void( $txtid, $data );
-			}
-		} else if (  $order->order_status == "refund half" ) {
-			// TODO ? not possible in Virtuemart
-			// $orderDetail = $this->getAllOrderDetails( $order->order_number );
-			// $txtid = $orderDetail->txnid;
-			// $response = \Paylike\Transaction::fetch( $txtid ); // fetch order detail from paylike
-			// /* refund payment if already captured */
-			// if ( $response['transaction']['capturedAmount'] > 0 && $response['transaction']['refundedAmount'] <= 0 ) {
-				// $amount = $response['transaction']['capturedAmount'];
-				// $data = array(
-					// 'amount'     => round( $amount / 2 ),
-					// 'descriptor' => ""
-				// );
-				// $response = \Paylike\Transaction::refund( $txtid, $data );
-			// } else {
-				// /* void payment if not already captured */
-				// $data = array(
-					// 'amount' => $response['transaction']['amount']
-				// );
-				// $response = \Paylike\Transaction::void( $txtid, $data );
-			// }
+		if (!$this->selectedThisElement($method->payment_element)) {
+			return FALSE;
 		}
+
+		if(empty($method->email_currency)){
+
+		} else if($method->email_currency == 'vendor'){
+			$vendor_model = VmModel::getModel('vendor');
+			$vendor = $vendor_model->getVendor($method->virtuemart_vendor_id);
+			$emailCurrencyId = $vendor->vendor_currency;
+		} else if($method->email_currency == 'payment'){
+			$emailCurrencyId = $this->getPaymentCurrency($method);
+		}
+
+
 	}
 
-	/*
-		Predefined function of Virtualmart to declare all settings params in payment variable
-	*/
-	function plgVmDeclarePluginParamsPaymentVM3( &$data ) {
-		return $this->declarePluginParams( 'payment', $data );
+	/**
+	 * This method is fired when showing when priting an Order
+	 * It displays the the payment method-specific data.
+	 *
+	 * @param integer $_virtuemart_order_id The order ID
+	 * @param integer $method_id  method used for this order
+	 * @return mixed Null when for payment methods that were not selected, text (HTML) otherwise
+	 * @author Valerie Isaksen
+	 */
+	function plgVmonShowOrderPrintPayment ($order_number, $method_id) {
+
+		return $this->onShowOrderPrint ($order_number, $method_id);
 	}
 
-	function plgVmgetPaymentCurrency( $virtuemart_paymentmethod_id, $type = false ) {
-		if ( ! ( $method = $this->getVmPluginMethod( $virtuemart_paymentmethod_id ) ) ) {
-		}
+	function plgVmDeclarePluginParamsPaymentVM3( &$data) {
+		return $this->declarePluginParams('payment', $data);
+	}
+	function plgVmSetOnTablePluginParamsPayment ($name, $id, &$table) {
+
+		return $this->setOnTablePluginParams ($name, $id, $table);
+	}
+
+
+	protected function renderPluginName( $plugin ) {
 		
-		// Another method was selected, do nothing
-		if ( ! $this->selectedThisElement( $method->payment_element ) ) {
-			return false;
+		
+		$return ='
+		<style>.paylike-wrapper .payment_logo img {
+				height: 30px;
+				padding: 2px;
+			}</style>';
+		$return .= "<div class='paylike-wrapper' style='display: inline-block'><div class='paylike_title' >" . $plugin->title . "</div>";
+		$return .= "<div class='payment_logo' >";
+		// $card = implode( "~", $plugin->card );
+		$path = JURI::root().'plugins/vmpayment/paylike/images/' ;
+		$allcards = array('mastercard' =>'mastercard','maestro' =>'maestro','visa' =>'visa','visaelectron' =>'visaelectron');
+		if (empty($plugin->card)) {
+			$cards = $allcards;
+		} else $cards = $plugin->card;
+		foreach($cards as $card) {
+			if(isset($allcards[$card]) && isset($plugin->$card)){
+				$return .= "<img src='" . $path . $plugin->$card . "' />";
+			}
 		}
-		$this->getPaymentCurrency( $method );
-		$paymentCurrencyId = $method->payment_currency;
-		$currency_model = VmModel::getModel( 'currency' );
-		$displayCurrency = $currency_model->getCurrency( $paymentCurrencyId );
-		if ( $type == "code" ) {
-			return $displayCurrency->currency_code_3;
-		} else {
-			return $displayCurrency->currency_symbol;
+		$return .= "</div></div>";
+		$return .= '<div class="paylike_desc" >' . $plugin->description . '</div>';
+		if ( $plugin->test_mode == 1 ) {
+			$return .= '<div class="payment_box payment_method_paylike"><p>TEST MODE ENABLED. In test mode, you can use the card number 4100 0000 0000 0000 with any CVC and a valid expiration date. "<a href="https://github.com/paylike/sdk">See Documentation</a>".</p></div>';
 		}
+		$layout = vRequest::getCmd('layout', 'default');
+		$view = vRequest::getCmd('view', '');
+		if($plugin->checkout_mode === 'before' && $view === 'cart') {
+			if(!isset(plgVmPaymentPaylike::$IDS[$plugin->virtuemart_paymentmethod_id])) {
+				$return .= $this->renderByLayout('pay_before', array(
+					'method'=>$plugin
+				));
+			//$return .="<pre>".print_r($plugin,TRUE)."</pre>";
+			}
+			plgVmPaymentPaylike::$IDS[$plugin->virtuemart_paymentmethod_id] = true;
+		}
+		return $return;
 	}
 
-
-	/* load address of user */
-	function loadAddress($billingDetail) {
-		$address = "";
-		if ( $billingDetail['address_1'] != "" ) {
-			$address .= $billingDetail['address_1'] . ", ";
-		}
-		if ( $billingDetail['address_2'] != "" ) {
-			$address .= $billingDetail['address_2'] . ", ";
-		}
-		if ( $billingDetail['city'] != "" ) {
-			$address .= $billingDetail['city'] . ", ";
-		}
-		if ( $billingDetail['virtuemart_country_id'] != "" ) {
-			$address .= $this->getCountryName( $billingDetail['virtuemart_country_id'] ) . ", ";
-		}
-		if ( $billingDetail['virtuemart_state_id'] != "" ) {
-			$address .= $this->getStateName( $billingDetail['virtuemart_state_id'] ) . ", ";
-		}
-		if ( $billingDetail['zip'] != "" ) {
-			$address .= $billingDetail['zip'] . " ";
-		}
-
-		return $address;
+	/* get current joomla version */
+	function getJoomlaVersions() {
+		jimport('joomla.version');
+		$version = new JVersion();
+		return $version->RELEASE;
 	}
 
+	/* get current Virtuemart version */
+	function getVirtuemartVersions() {
+		return vmVersion::$REVISION;
+	}
+	function setKey($method){
+		if ( $method->test_mode == 1 ) {
+			$privateKey = $method->test_api_key;
+			$publicKey = $method->test_public_key;
+		} else /* if live mode */ {
+			$privateKey = $method->live_api_key;
+			$publicKey = $method->live_public_key;
+		}
+		\Paylike\Client::setKey( $privateKey ); // set private key for further paylike functions
+		$this->publicKey = $publicKey;
+		return $publicKey;
+	}
 	/* Used for many different purposes (Payment Capture, Refund, Half Refund and Void) */
 	function plgVmOnSelfCallFE( $type, $name, &$render ) {
 		$id = vRequest::getInt('virtuemart_paymentmethod_id',0);
@@ -512,241 +512,193 @@ class plgVmPaymentPaylike extends vmPSPlugin {
 		if ( ! $this->selectedThisElement( $method->payment_element ) ) {
 			return false;
 		}
-		$session = JFactory::getSession();
-		// var_dump($method); jexit();
-		/* if testing mode */
-		if ( $method->test_mode == 1 ) {
-			$privateKey = $method->test_api_key;
-			$publicKey = $method->test_public_key;
-		} else /* if live mode */ {
-			$privateKey = $method->live_api_key;
-			$publicKey = $method->live_public_key;
-		}
-		\Paylike\Client::setKey( $privateKey ); // set private key for further paylike functions
 		$transactionId = vRequest::get('transactionId');
-
-		$cart = VirtueMartCart::getCart( false );
-		$cart->prepareCartData();
-
-		$currency = $this->plgVmgetPaymentCurrency( $method->virtuemart_paymentmethod_id, "code" );
-		$price = floatval( str_replace( ",", "", $cart->cartPrices['billTotal'] ) );
-		$priceInCents = ceil( round( $price, 3 ) * $this->paylikeCurrency->getPaylikeCurrencyMultiplier( $currency ) );
-
-		if ( vRequest::getVar('paymentType') == "captureTransactionFull" ) {
-			/* capture payment when order created (instant payment) */
-			$session->set( 'transactionId', $transactionId );
-			// if ( $method->capture_mode == 'instant' ) {
-			// echo $transactionId;
-			$data = array(
-				'amount'   => round($priceInCents),
-				'currency' => $currency
-			);
-			$response = \Paylike\Transaction::capture( $transactionId, $data );
-			// $user = JFactory::getUser();
-			// $isroot = $user->authorise('core.admin');
-			// if($isroot ) {
-				// echo json_encode($response);
-				// jexit();
-			// } else 
-			echo "1";
-				//HERE WE NEED TO VERIFY THE $response, to prevent hack ! 
-			// }
-		} else if ( vRequest::getInt('save',0)) {
-			// get transaction to verify some values before save
+		// $this->getPaymentCurrency( $method );
+		// $currency = shopFunctions::getCurrencyByID($method->payment_currency, 'currency_code_3');
+		// $paymentCurrencyId = $method->payment_currency;
+		$json = new stdClass;
+		$json->error = '';
+		$json->success = '0';
+		$this->setKey( $method ); // set private key for further paylike functions
+		if($method->checkout_mode === 'after') {
+			//$response have all send datas, so we can compare
 			$response = \Paylike\Transaction::fetch( $transactionId);
-			
-			// print("<pre>".print_r($response,true)."</pre>");
-			if(!isset($response['transaction']['custom']['paylikeID'])) {
-				echo 'ERROR Fetching transaction';
+			if(isset($response['transaction']['custom'])) {
+				$transactionAmount = (int)$response['transaction']['amount'];
+				$transactionCurrency = $response['transaction']['currency'];
+				//get original vlaues from cart session
+				$cart = VirtueMartCart::getCart(false);
+				$modelOrder = VmModel::getModel ('orders');
+				if(!empty($cart->virtuemart_order_id)) {
+					$order = $modelOrder->getOrder($cart->virtuemart_order_id);
+					$details = $order['details']['BT'];
+						// echo json_encode($order);
+						// jexit();
+					// print("<pre>".print_r($order,true)."</pre>");
+					$currency = shopFunctions::getCurrencyByID( $details->payment_currency_id, 'currency_code_3');
+					$paylikeCurrency = new PaylikeCurrency();
+					$price = floatval( str_replace( ",", "", $details->order_total ) );
+					$priceInCents = ceil( round( $price, 3 ) * $paylikeCurrency->getPaylikeCurrencyMultiplier( $currency ) );
+					$amount = (int)round($priceInCents);
+					if($transactionAmount !== $amount || $transactionCurrency !== $currency ) {
+						$json->error = 'Error in Order amount ' . $amount .' '. $currency;
+					} else if((int)$cart->virtuemart_order_id !== (int)$response['transaction']['custom']['orderId']) {
+						$json->error = 'Error transaction not for this order' . $cart->virtuemart_order_id;
+					} else {
+						$json->cart_order_id  = $cart->virtuemart_order_id;
+						$cart->emptyCart ();
+						$oldStatut = $details->order_status;
+						// we clean the cart now and update the order
+						$order['order_status'] = $this->getNewStatus ($method);
+						$order['customer_notified'] = 1;
+						$order['comments'] = '';
+						$this->updateTransactionId($transactionId,$json->cart_order_id);
+						
+						// echo json_encode($order);
+						// jexit();
+						$modelOrder->updateStatusForOneOrder ($details->virtuemart_order_id, $order, TRUE);
+						$json->order_id  = $details->virtuemart_order_id;
+						$json->oldStatut  = $oldStatut;
+						$json->status  = $order['order_status'];
+						$json->success = '1';
+					}
+				} else {
+					$json->error = 'No order id found';
+					
+					$json->order = $modelOrder->getOrder((int)$response['transaction']['custom']['orderId']);
+				}
+			} else {
+				$json->error = 'Cannot fetch Transaction';
 			}
-			$paylikeID = $response['transaction']['custom']['paylikeID'];
-			$sessionPaylikeID = $session->get( 'paylikeID', '');
-			if($paylikeID !== $sessionPaylikeID ) {
-				echo 'Bad Transaction !';
-			}
-			/* save order transactionId after order is created from frontend */
-			// We have a confirmation, set the 
-			$db = JFactory::getDbo();
-			$order_id = vRequest::getInt('virtuemart_order_id',0);
-			$data = new stdClass();
-			$data->txnid = $transactionId;
-			$data->virtuemart_order_id = $order_id;
-			// print("<pre>".print_r($response['transaction']['custom']['paylikeID'],true)."</pre>");
-			// var_dump($response);
-			$db->updateObject('#__virtuemart_payment_plg_paylike', $data, 'virtuemart_order_id');
-			$modelOrder = VmModel::getModel ('orders');
-			$order['order_status'] = 'C';// confirmed payment need a new setting $this->getNewStatus ($method);
-			$order['customer_notified'] = 1;
-			$order['comments'] = '';
-			$modelOrder->updateStatusForOneOrder ($order_id, $order, TRUE);
-			// do we need perhaps to verify amount ?
-			jexit();
 		} else {
-			$paylikeID = uniqid('paylike_');
-			$session->set( 'paylikeID', $paylikeID);
-			// this data is send to prepare the paylike payment content and datas.
-			// SECURE ????
-			$lang = JFactory::getLanguage();
-			$languages = JLanguageHelper::getLanguages( 'lang_code' );
-			$languageCode = $languages[ $lang->getTag() ]->sef; 
-			// remove thousand seperators(,)
+			$task = vRequest::get('paylikeTask');
+			$session = JFactory::getSession();
+			if($task === 'cartData') {
+				
+				$paylikeID = uniqid('paylike_');
+				$session->set( 'paylike.uniqid', $paylikeID);
+				$cart = VirtueMartCart::getCart(false);
+				$cart->prepareCartData();
+				$billingDetail = $cart->BT;
+				$paylikeCurrency = new PaylikeCurrency();
+				$price = floatval( str_replace( ",", "", $cart->cartPrices['billTotal'] ) );
+				$this->getPaymentCurrency( $method );
+				$currency = shopFunctions::getCurrencyByID($method->payment_currency, 'currency_code_3');
+				$priceInCents = ceil( round( $price, 3 ) * $paylikeCurrency->getPaylikeCurrencyMultiplier( $currency ) );
+				$lang = JFactory::getLanguage();
+				$languages = JLanguageHelper::getLanguages( 'lang_code' );
+				$locale = $languages[ $lang->getTag() ]->sef;
+				$json->publicKey = $this->publicKey;
+				$json->locale = $locale;
+				$json->currency = $currency;
+				$json->amount = round($priceInCents);
+				$json->customer = new stdClass();
+				$json->customer->name = $billingDetail['first_name'] . " " . $billingDetail['last_name'];
+				$json->customer->email = $billingDetail['email'];
+				$json->customer->phoneNo = $billingDetail['phone_1'];
+				$json->customer->IP = $_SERVER["REMOTE_ADDR"];
+				$json->platform = array(
+					'name' => 'Joomla',
+					'version' => $this->getJoomlaVersions()
+					);
+				$json->ecommerce = array(
+					'name' => 'VirtueMart',
+					'version' => $this->getVirtuemartVersions()
+					);
+				$json->paylikeID = $paylikeID; // this is session ID to secure the transaction, i'ts fetch after to validate
 
+			} else if ($task === 'saveInSession') {
+				
+				$response = \Paylike\Transaction::fetch( $transactionId);
+				$sessionPaylikeID = $session->get( 'paylike.uniqid','');
+				$paylikeID = $response['transaction']['custom']['paylikeID'];
+				if($paylikeID !== $sessionPaylikeID ) {
+					$json->error = 1;
+					$json->msg = 'Bad Transaction !'.$sessionPaylikeID;
+				} else {
+					$json->success ='1';
+					//we set here the real transactionId in session
+					$session->set( 'paylike.transactionId', $transactionId);
+				}
+			}
+		}
+		$jAp = JFactory::getApplication();
+		$json->JoomMsg = $jAp->getMessageQueue();
+		echo json_encode($json);
+		jexit();
+	}
+	function updateTransactionId($transactionId,$orderid){
 			$data = new stdClass();
-			$data->paylikeID = $paylikeID;
-			$data->publicKey = $publicKey;
-			$data->captureMode = $method->capture_mode;
-			$data->paymentmethod_id = $method->virtuemart_paymentmethod_id;
-			$data->locale = $languageCode;
-			$data->currency = $currency;
-			$data->popupTitle = jText::_($method->popup_title);
-			$data->version = $this->version;
-			$data->products = array();
-			foreach ( $cart->products as $product ) {
-				$data->products[] = array(
-					"Id" => $product->virtuemart_product_id,
-					"Name" => $product->product_name,
-					"Qty" => $product->quantity,
-				);
-			}
-			$data->amount = round($priceInCents);
-			$billingDetail = $cart->BT;
-			$data->customer = new stdClass();
-			$data->customer->name = $billingDetail['first_name'] . " " . $billingDetail['last_name'];
-			$data->customer->email = $billingDetail['email'];
-			$data->customer->phoneNo = $billingDetail['phone_1'];
-			$data->customer->IP = $_SERVER["REMOTE_ADDR"];
-			$data->platform = array(
-				'name' => 'Joomla',
-				'version' => $this->getJoomlaVersions()
-				);
-			$data->ecommerce = array(
-				'name' => 'VirtueMart',
-				'version' => $this->getVirtuemartVersions()
-				);
-			/* get API Key and cart */
-			echo json_encode($data);
-			jexit();
+			$data->paylike_data = $transactionId;
+			$data->virtuemart_order_id = $orderid;
+			$db	= JFactory::getDBO();
+			$db->updateObject($this->_tablename, $data, 'virtuemart_order_id');
+	}
+	//update âylike on update statut
+	function plgVmOnUpdateOrderPayment( $order, $old_order_status ) {
+
+		if (!($method = $this->getVmPluginMethod ($order->virtuemart_paymentmethod_id))) {
+			return NULL;
 		}
+		// Another method was selected, do nothing
+		if ( ! $this->selectedThisElement( $method->payment_element ) ) {
+			return NULL;
+		}
+		//todo half refund $order->order_status != $method->status_half_refund
+		if ($order->order_status != $method->status_capture 
+			&& $order->order_status != $method->status_success
+			&& $order->order_status != $method->status_refunded
 
-	}
-
-	/* get country name from Id */
-	function getCountryName( $virtuemart_country_id ) {
-		$db = JFactory::getDBO();
-		$q = 'SELECT country_name FROM `#__virtuemart_countries` '
-			. 'WHERE `virtuemart_country_id` = ' . $virtuemart_country_id;
-		$db->setQuery( $q );
-		$country_name = $db->loadResult();
-
-		return $country_name;
-	}
-
-	/* get state name from Id */
-	function getStateName( $virtuemart_state_id ) {
-		$db = JFactory::getDBO();
-		$q = 'SELECT state_name FROM `#__virtuemart_states` '
-			. 'WHERE `virtuemart_state_id` = ' . $virtuemart_state_id;
-		$db->setQuery( $q );
-		$state_name = $db->loadResult();
-
-		return $state_name;
-	}
-
-	/* get current joomla version */
-	function getJoomlaVersions() {
-		$db = JFactory::getDBO();
-		$q = 'SELECT manifest_cache FROM `#__extensions` '
-			. 'WHERE `element` = "joomla" AND `name` = "files_joomla"';
-		$db->setQuery( $q );
-		$version = $db->loadResult();
-		$data = json_decode( $version );
-
-		return JVERSION ? JVERSION : $data->version;
-	}
-
-	/* get current Virtuemart version */
-	function getVirtuemartVersions() {
-		$db = JFactory::getDBO();
-		$q = 'SELECT manifest_cache FROM `#__extensions` '
-			. 'WHERE `element` = "com_virtuemart"';
-		$db->setQuery( $q );
-		$version = $db->loadResult();
-		$data = json_decode( $version );
-
-		return $data->version;
-	}
-
-	/* get order detail from database with order number */
-	function getAllOrderDetails( $orderNumber ) {
-		$db = JFactory::getDBO();
-		$q = 'SELECT * FROM `#__virtuemart_payment_plg_paylike` '
-			. 'WHERE `order_number` = ' . $db->quote( $orderNumber );
-		$db->setQuery( $q );
-		$data = $db->loadobject();
-
-		return $data;
-	}
-
-	/* add refund half order status in database */
-	function addOptionForOrderStatus() {
-		$db = JFactory::getDbo();
-		$q = 'SELECT * FROM `#__virtuemart_orderstates` '
-			. 'WHERE `order_status_code` = "W"';
-		$db->setQuery( $q );
-		$data = $db->loadobject();
-		$q2 = 'SELECT * FROM `#__virtuemart_orderstates` '
-			. 'WHERE `order_status_code` = "E"';
-		$db->setQuery( $q2 );
-		$sentdata = $db->loadobject();
-		$q3 = 'SELECT * FROM `#__virtuemart_orderstates` '
-			. 'WHERE `order_status_code` = "C"';
-		$db->setQuery( $q3 );
-		$confirmdata = $db->loadobject();
-		// Create a new query object.
-		if ( empty( $data ) || empty( $sentdata ) || empty( $confirmdata ) ) {
-			$query = $db->getQuery( true );
-
-			// Insert columns.
-			$columns = array( 'order_status_code', 'order_status_name' );
-
-			// Insert values.
-			$val = array();
-			$i = 0;
-			if ( empty( $data ) ) {
-				$val[ $i ] = array( $db->quote( "W" ), $db->quote( "Refund Half" ) );
-				$i ++;
+			
+			) {
+			// vminfo('Order_status not found '.$order->order_status.' in '.$method->status_capture.', '.$method->status_success.', '.$method->status_refunded );
+			return null;
+		}
+		// order exist for paylike ?
+		if (!($paymentTable = $this->getDataByOrderId($order->virtuemart_order_id))) {
+			return NULL;
+		}
+		$this->setKey( $method );
+		$transactionid = $paymentTable->paylike_data;
+		$response = \Paylike\Transaction::fetch( $transactionid );
+		vmdebug('Paylike Transaction::fetch',$response);
+		if($order->order_status == $method->status_refunded) {
+			/* refund payment if already captured */
+			if ( !empty($response['transaction']['capturedAmount'])) {
+				$amount = $response['transaction']['capturedAmount'];
+				$data = array(
+					'amount'     => $amount,
+					'descriptor' => ""
+				);
+				$response = \Paylike\Transaction::refund($transactionid, $data );
+				vmdebug('Paylike Transaction::refund',$response);
+			} else {
+				/* void payment if not already captured */
+				$data = array(
+					'amount' => $response['transaction']['amount']
+				);
+				$response = \Paylike\Transaction::void( $transactionid, $data );
+				vmdebug('Paylike Transaction::void',$response);
 			}
-			if ( empty( $confirmdata ) ) {
-				$val[ $i ] = array( $db->quote( "C" ), $db->quote( "Confirmed" ) );
-				$i ++;
+		} else if($order->order_status == $method->status_capture) {
+			if ( empty($response['transaction']['capturedAmount'])) {
+				$amount = $response['transaction']['amount'];
+				$data = array(
+					'amount'     => $amount,
+					'descriptor' => ""
+				);
+				
+				$response = \Paylike\Transaction::capture( $transactionid, $data );
+				
+				vmdebug('Paylike Transaction::capture',$response);
+			} else {
+				/* void payment if not already captured */
+				// $data = array(
+					// 'amount' => $response['transaction']['amount']
+				// );
+				// $response = \Paylike\Transaction::void( $transactionid, $data );
 			}
-			if ( empty( $sentdata ) ) {
-				$val[ $i ] = array( $db->quote( "E" ), $db->quote( "Sent" ) );
-				$i ++;
-			}
-
-			// Prepare the insert query.
-			$query
-				->insert( $db->quoteName( '#__virtuemart_orderstates' ) )
-				->columns( $db->quoteName( $columns ) );
-			foreach ( $val as $key => $v ) {
-				$query->values( implode( ",", $val[ $key ] ) );
-			}
-			// Set the query using our newly populated query object and execute it.
-			$db->setQuery( $query );
-			$db->execute();
 		}
 	}
-
-	function getOrderStateName( $state ) {
-		$db = JFactory::getDbo();
-		$q = 'SELECT * FROM `#__virtuemart_orderstates` '
-			. 'WHERE `order_status_code` = "' . $state . '"';
-		$db->setQuery( $q );
-		$data = $db->loadobject();
-
-		return $data->order_status_name;
-	}
-
-
 }
+

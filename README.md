@@ -38,8 +38,8 @@ Under the VirtueMart Paylike payment method settings, you can:
  
  1. Capture
  * In Instant mode, the orders are captured automatically
- * In delayed mode you can capture an order by moving the order to the completed/shipped status from pending. 
+ * In delayed mode you can capture an order by moving the order to the shipped status from pending. 
  2. Refund
-   * To refund an order move the order into refunded or half refund status.
+   * To refund an order move the order into refunded status.
  3. Void
    * To void an order you can move the order into cancelled status. 
