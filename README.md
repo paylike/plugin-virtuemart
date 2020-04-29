@@ -3,7 +3,11 @@
 This plugin is *not* developed or maintained by Paylike but kindly made
 available by a user.
 
-Released under the GPL V3 license: https://opensource.org/licenses/GPL-3.0
+Released under the GNU V2 license: http://www.gnu.org/licenses/gpl-2.0.html GNU/GPL
+
+## Important
+
+Version `2.*` is not backward compatible with version `1.*` . You need to remove the extension before installing `2.*` . Make sure old orders are all processed before installing the new version. 
 
 ## Supported VirtueMart versions
 
@@ -14,7 +18,7 @@ Released under the GPL V3 license: https://opensource.org/licenses/GPL-3.0
 ## Installation
 
 1.Once you have installed VirtueMart on your Joomla setup, follow these simple steps:
-  Signup at (paylike.io) [https://paylike.io] (it’s free)
+  Signup at [paylike.io](https://paylike.io) (it’s free)
   
   1. Create a live account
   1. Create an app key for your Joomla website
@@ -38,8 +42,8 @@ Under the VirtueMart Paylike payment method settings, you can:
  
  1. Capture
  * In Instant mode, the orders are captured automatically
- * In delayed mode you can capture an order by moving the order to the completed/shipped status from pending. 
+ * In delayed mode you can capture an order by moving the order to the shipped status from pending. 
  2. Refund
-   * To refund an order move the order into refunded or half refund status.
+   * To refund an order move the order into refunded status.
  3. Void
    * To void an order you can move the order into cancelled status. 
