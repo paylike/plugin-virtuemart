@@ -17,9 +17,8 @@ Version `2.*` is not backward compatible with version `1.*` . You need to remove
 
 ## Installation
 
-1.Once you have installed VirtueMart on your Joomla setup, follow these simple steps:
-  Signup at [paylike.io](https://paylike.io) (it’s free)
-  
+  Once you have installed VirtueMart on your Joomla setup, follow these simple steps:
+  1. Signup at [paylike.io](https://paylike.io) (it’s free)
   1. Create a live account
   1. Create an app key for your Joomla website
   1. Upload the plugin zip trough the 'Extensions' screen in Joomla.
