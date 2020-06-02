@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <extension version="2.5" type="plugin" group="vmpayment" method="upgrade">
     <name>VM - Payment, Paylike Version 2</name>
-    <creationDate>April 2020</creationDate>
+    <creationDate>25 May 2020</creationDate>
     <author>Patrick Kohl</author>
     <authorUrl>http://shop.st42.fr</authorUrl>
     <copyright>Copyright (C) 2018 STUDIO42 France. All rights reserved.</copyright>
     <license>http://www.gnu.org/licenses/gpl-2.0.html GNU/GPL</license>
-    <version>2.0.0.3</version>
-    <description><![CDATA[<a href="http://paylike.com" target="_blank">Paylike</a> is a popular
+    <version>2.0.0.4</version>
+    <description><![CDATA[<a href="http://paylike.com" target="_blank">Paylke</a> is a popular
   payment provider. ]]>
     </description>
     <!-- Include plugin files and folders -->
@@ -80,7 +80,7 @@
                     <option value="mastercard">MasterCard</option>
                     <option value="maestro">Maestro</option>
                     <option value="visa">Visa</option>
-                    <option value="viselectron">Visa Electron</option>
+                    <option value="visaelectron">Visa Electron</option>
                 </field>
                 <field name="mastercard" type="filelist" hide_none="true" hide_default="true" directory='plugins/vmpayment/paylike/images/' label="VMPAYMENT_PAYLIKE_MASTERCARD_LOGO" description=""
                        default="mastercard.svg"/>
