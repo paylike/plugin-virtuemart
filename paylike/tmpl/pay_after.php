@@ -2,11 +2,13 @@
 defined ('_JEXEC') or die();
 
 /**
- * @author Valérie Isaksen
- * @version $Id$
+ * @version $Id: paylike.php,v 2.0.0.6 2020/06/18 14:29:00 ei
+ *
+ * paylike paiment plugin:
+ * @author Kohl Patrick
  * @package VirtueMart
  * @subpackage payment
- * @copyright Copyright (C) 2004 - 2014 Virtuemart Team. All rights reserved.
+ * @copyright Copyright (c) Studio 42. All rights reserved.
  * @license http://www.gnu.org/copyleft/gpl.html GNU/GPL, see LICENSE.php
  * VirtueMart is free software. This version may have been modified pursuant
  * to the GNU General Public License, and as distributed it includes or
@@ -14,9 +16,8 @@ defined ('_JEXEC') or die();
  * other free or open source software licenses.
  * See /administrator/components/com_virtuemart/COPYRIGHT.php for copyright notices and details.
  *
- * http://virtuemart.net
+ * http://shop.st42.fr
  */
- 
 $method = $viewData["method"];
 $cart = $viewData["cart"];
 $billingDetail = $viewData["billingDetails"];
