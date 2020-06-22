@@ -23,16 +23,4 @@ include_once(JPATH_PLUGINS.'/'.$this->_type . '/' . $this->_name.'/tmpl/pay_befo
  ?>
 <script>
 	vmPaylike.method["ID<?php echo $method->virtuemart_paymentmethod_id ?>"] = <?php echo $method->virtuemart_paymentmethod_id; ?>;
-<?php if (JPluginHelper::isEnabled('system', 'vponepagecheckout')) { ?>
-	jQuery(document).ready(function($) {
-		$(document).on('vpopc.event', function(event, type) {
-			if (type == 'checkout.orderVerification.success') {
-				$('<input />').attr('type', 'hidden').attr('name', 'confirm').attr('id', 'checkoutFormSubmit').val('1').appendTo($('#checkoutForm'));
-			} else {
-				$('input#checkoutFormSubmit').remove();
-			}
-		});
-	});
-<?php } ?>
-
 </script>

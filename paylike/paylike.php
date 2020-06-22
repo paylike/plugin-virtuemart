@@ -11,14 +11,13 @@ if ( ! class_exists( 'vmPSPlugin' ) ) {
 	require( JPATH_VM_PLUGINS . DS . 'vmpsplugin.php' );
 } 
 /**
- * @version $Id: paylike.php,v 1.4 2005/05/27 19:33:57 ei
+ * @version $Id: paylike.php,v 2.0.0.6 2020/06/18 14:29:00 ei
  *
- * a special type of 'cash on delivey':
- * @author Max Milbers, Valérie Isaksen
- * @version $Id: paylike.php 5122 2011-12-18 22:24:49Z alatak $
+ * paylike paiment plugin:
+ * @author Kohl Patrick
  * @package VirtueMart
  * @subpackage payment
- * @copyright Copyright (c) 2004 - 2019 VirtueMart Team. All rights reserved.
+ * @copyright Copyright (c) Studio 42. All rights reserved.
  * @license http://www.gnu.org/copyleft/gpl.html GNU/GPL, see LICENSE.php
  * VirtueMart is free software. This version may have been modified pursuant
  * to the GNU General Public License, and as distributed it includes or
@@ -26,12 +25,12 @@ if ( ! class_exists( 'vmPSPlugin' ) ) {
  * other free or open source software licenses.
  * See /administrator/components/com_virtuemart/COPYRIGHT.php for copyright notices and details.
  *
- * http://virtuemart.net
+ * http://shop.st42.fr
  */
 
 class plgVmPaymentPaylike extends vmPSPlugin {
 	
-	public $version = '2.0.0.4';
+	public $version = '2.0.0.0';
 	static $IDS = array();
 	protected $_isInList = false;
 	function __construct (& $subject, $config) {

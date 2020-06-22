@@ -22,7 +22,7 @@ if ( ! class_exists( 'Paylike\\Client' ) ) {
 
         /**
          * @param $privateApiKey
-         * Set the App Key for future calls
+         * Set the api key for future calls
          */
         public static function setKey( $privateApiKey ) {
             self::$adapter = new Adapter( $privateApiKey );
