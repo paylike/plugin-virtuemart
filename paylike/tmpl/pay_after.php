@@ -2,7 +2,7 @@
 defined ('_JEXEC') or die();
 
 /**
- * @version $Id: paylike.php,v 2.0.0.6 2020/06/18 14:29:00 ei
+ * @version $Id: paylike.php,v 2.0.0.7 2020/06/18 14:29:00 ei
  *
  * paylike paiment plugin:
  * @author Kohl Patrick
@@ -67,7 +67,7 @@ $data->ajaxUrl = juri::root(true).'/index.php?option=com_virtuemart&view=plugin&
 <style>
 	.paylike-info-hide{display:none;}
 </style>
-<script src="https://sdk.paylike.io/4.js"></script>
+<script src="https://sdk.paylike.io/6.js"></script>
 
 
 <div id="paylike-temp-info">
@@ -133,8 +133,6 @@ jQuery(document).ready(function($) {
 						async: false,
 						data: payData,
 						success: function(data) {
-							// console.log('captureTransactionFull',txt);
-							// console.log('captureTransactionFull',e,r);
 							if(data.success =='1') {
 								$('#paylike-after-info').toggleClass('.paylike-info-hide');
 								$('#paylike-temp-info').remove();
