@@ -67,7 +67,7 @@ $data->ajaxUrl = juri::root(true).'/index.php?option=com_virtuemart&view=plugin&
 <style>
 	.paylike-info-hide{display:none;}
 </style>
-<script src="https://sdk.paylike.io/4.js"></script>
+<script src="https://sdk.paylike.io/6.js"></script>
 
 
 <div id="paylike-temp-info">
@@ -133,8 +133,6 @@ jQuery(document).ready(function($) {
 						async: false,
 						data: payData,
 						success: function(data) {
-							// console.log('captureTransactionFull',txt);
-							// console.log('captureTransactionFull',e,r);
 							if(data.success =='1') {
 								$('#paylike-after-info').toggleClass('.paylike-info-hide');
 								$('#paylike-temp-info').remove();

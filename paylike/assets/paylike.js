@@ -18,7 +18,6 @@ jQuery(function() {
 			checkoutFormbtn = $btn.attr('name');
 			//.is('[type="submit"]');
 			//checkoutFormbtn = jQuery(this).attr('name');
-			console.log(checkoutFormbtn);
 		}
 	});
 });
@@ -74,8 +73,6 @@ function popup(callback) {
 				async: false,
 				data: payData,
 				success: function(txt) {
-					console.log('captureTransactionFull',txt);
-					// console.log('captureTransactionFull',e,r);
 					if(txt =='1') callback(r,datas);
 				}
 			});
@@ -92,8 +89,6 @@ function get_api_key() {
 		async: false,
 		data: "",
 		success: function(e) {
-			
-			console.log(e);
 			s = e
 		}
 	});
@@ -110,7 +105,6 @@ function get_api_info() {
 		data: "",
 		success: function(e) {
 			s = e;
-			console.log(s);
 		},
         dataType: "json"
 	});
@@ -132,7 +126,6 @@ function paylikeSubmitHandler() {
 			//in case we have no methods, then use default
 			if(jQuery("[name=virtuemart_paymentmethod_id]").length == 0) {
 				methodId = vmPaylike.methodId;
-				console.log(methodId + " use default");
 			} else console.log(methodId + "not found");
 		}
 		var data = vmPaylike.method[methodId];
@@ -150,7 +143,6 @@ function paylikeSubmitHandler() {
 			.addClass( 'vm-button-correct' );
 		var name = $submit.attr('name');
 		jQuery('#checkoutForm').find('input:hidden[name="'+name+'"]').remove();
-		console.log(name);
 		event.preventDefault();
 		if (paylikeMode == 'after') {
 			$submit.addClass("payment_after");
@@ -240,5 +232,3 @@ function postData(transactionId,methodId) {
 		}
 	});
 }
-
-
