@@ -2,7 +2,7 @@
 defined ('_JEXEC') or die();
 
 /**
- * @version $Id: paylike.php,v 2.0.0.6 2020/06/18 14:29:00 ei
+ * @version $Id: paylike.php,v 2.0.0.7 2020/06/18 14:29:00 ei
  *
  * paylike paiment plugin:
  * @author Kohl Patrick
