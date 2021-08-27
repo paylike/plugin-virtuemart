@@ -8,7 +8,7 @@ $vponepagecheckout = JPluginHelper::isEnabled('system', 'vponepagecheckout');
 <script>
 if (typeof vmPaylike === "undefined"){
 	var vmPaylike = {};
-	 jQuery.getScript("https://sdk.paylike.io/6.js", function(){});
+	 jQuery.getScript("https://sdk.paylike.io/10.js", function(){});
 }
 vmPaylike.method = {};
 vmPaylike.site = '<?php echo juri::root(true); ?>/index.php?option=com_virtuemart&view=plugin&type=vmpayment&name=paylike&format=json';
@@ -38,12 +38,22 @@ vmPaylike.paymentDone = false;
 						data.virtuemart_paymentmethod_id = id;
 						// Get payment info for this method ID
 						$.getJSON( vmPaylike.site, data, function( datas ) {
-							paylike = Paylike(datas.publicKey);
-							paylike.popup({
+
+							publicKey = {
+								key: datas.publicKey
+							};
+
+							paylike = Paylike(publicKey);
+
+							paylike.pay({
+								test: ('1' == datas.testMode) ? (true) : (false),
 								title: datas.title,
 								description: datas.description,
-								currency: datas.currency,
-								amount: datas.amount,
+								amount: {
+									currency: datas.currency,
+									exponent: datas.exponent,
+									value:	datas.amount
+								},
 								locale: datas.locale,
 								custom: {
 									//orderId: datas.orderId,
@@ -152,12 +162,22 @@ jQuery(document).ready(function($) {
 		$.getJSON( vmPaylike.site, data, function( datas ) {
 			$btn.prop('disabled', false).addClass('vm-button-correct').removeClass('vm-button');
 			$(this).vm2front('stopVmLoading');
-			paylike = Paylike(datas.publicKey);
-			paylike.popup({
+
+			publicKey = {
+				key: datas.publicKey
+			};
+
+			paylike = Paylike(publicKey);
+
+			paylike.pay({
+				test: ('1' == datas.testMode) ? (true) : (false),
 				title: datas.title,
 				description: datas.description,
-				currency: datas.currency,
-				amount: datas.amount,
+				amount: {
+					currency: datas.currency,
+					exponent: datas.exponent,
+					value:	datas.amount
+				},
 				locale: datas.locale,
 				custom: {
 					//orderId: datas.orderId,

@@ -2,9 +2,7 @@
 defined ('_JEXEC') or die();
 
 /**
- * @version $Id: paylike.php,v 2.0.0.7 2020/06/18 14:29:00 ei
- *
- * paylike paiment plugin:
+ * paylike payment plugin:
  * @author Kohl Patrick
  * @package VirtueMart
  * @subpackage payment
@@ -67,7 +65,7 @@ $data->ajaxUrl = juri::root(true).'/index.php?option=com_virtuemart&view=plugin&
 <style>
 	.paylike-info-hide{display:none;}
 </style>
-<script src="https://sdk.paylike.io/6.js"></script>
+<script src="https://sdk.paylike.io/10.js"></script>
 
 
 <div id="paylike-temp-info">
@@ -99,16 +97,26 @@ if($viewData["orderlink"]){
 <script>
 jQuery(document).ready(function($) {
 	var datas = <?php echo json_encode($data) ?>;
-		paylike = Paylike(datas.publicKey);
+
+	var publicKey = {
+		key: datas.publicKey
+	};
+
+	paylike = Paylike({key: datas.publicKey});
+
 	$('#paylike-pay').on('click',function(){
 		pay();
 	});
 	function pay(){
-		paylike.popup({
+		paylike.pay({
+			test: ('1' == datas.testMode) ? (true) : (false),
 			title: datas.title,
 			description: datas.description,
-			currency: datas.currency,
-			amount: datas.amount,
+			amount: {
+				currency: datas.currency,
+				exponent: datas.exponent,
+				value:	datas.amount
+			},
 			locale: datas.locale,
 			custom: {
 				orderId: datas.orderId,

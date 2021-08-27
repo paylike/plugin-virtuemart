@@ -24,7 +24,7 @@ jQuery(function() {
 
 function popup(callback) {
 	var datas = get_api_info();
-	var paylike = Paylike(datas.publicKey);
+	var paylike = Paylike({key: datas.publicKey});
 	var virtuemartOrderId = jQuery("[name=virtuemart_order_id]").val();
 	data = {};
 	i = 0;
@@ -45,10 +45,14 @@ function popup(callback) {
 		// j++;
 	// });
 
-	paylike.popup({
+	paylike.pay({
+		test: ('1' == datas.testMode) ? (true) : (false),
 		title: datas.popupTitle,
-		currency: datas.currency,
-		amount: datas.amount,
+		amount: {
+			currency: datas.currency,
+			exponent: datas.exponent,
+			value:	datas.amount
+		},
 		locale: datas.locale,
 		custom: {
 			orderId: datas.orderId,

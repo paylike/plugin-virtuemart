@@ -11,9 +11,7 @@ if ( ! class_exists( 'vmPSPlugin' ) ) {
 	require( JPATH_VM_PLUGINS . DS . 'vmpsplugin.php' );
 }
 /**
- * @version $Id: paylike.php,v 2.0.0.7 2020/06/18 14:29:00 ei
- *
- * paylike paiment plugin:
+ * paylike payment plugin:
  * @author Kohl Patrick
  * @package VirtueMart
  * @subpackage payment
@@ -30,7 +28,7 @@ if ( ! class_exists( 'vmPSPlugin' ) ) {
 
 class plgVmPaymentPaylike extends vmPSPlugin {
 
-	public $version = '2.0.0.7';
+	public $version = '2.1.0.0';
 	static $IDS = array();
 	protected $_isInList = false;
 	function __construct (& $subject, $config) {
@@ -187,7 +185,7 @@ class plgVmPaymentPaylike extends vmPSPlugin {
 				'displayTotalInPaymentCurrency' => $totalInPaymentCurrency['display'],
 				'orderlink' =>$orderlink
 			));
-			//before paiment display
+			//before payment display
 			//We delete the cart content
 			$cart->emptyCart ();
 			// and send Status email if needed
@@ -489,6 +487,7 @@ class plgVmPaymentPaylike extends vmPSPlugin {
 	function getVirtuemartVersions() {
 		return vmVersion::$REVISION;
 	}
+
 	function setKey($method){
 		if ( $method->test_mode == 1 ) {
 			$privateKey = $method->test_api_key;
@@ -501,7 +500,10 @@ class plgVmPaymentPaylike extends vmPSPlugin {
 		$this->publicKey = $publicKey;
 		return $publicKey;
 	}
-	/* Used for many different purposes (Payment Capture, Refund, Half Refund and Void) */
+
+	/**
+	 *  Used for many different purposes (Payment Capture, Refund, Half Refund and Void)
+	 */
 	function plgVmOnSelfCallFE( $type, $name, &$render ) {
 		$id = vRequest::getInt('virtuemart_paymentmethod_id',0);
 		if ( ! ( $method = $this->getVmPluginMethod( $id ) ) ) {
@@ -520,7 +522,7 @@ class plgVmPaymentPaylike extends vmPSPlugin {
 		$json->success = '0';
 		$this->setKey( $method ); // set private key for further paylike functions
 		if($method->checkout_mode === 'after') {
-			//$response have all send datas, so we can compare
+			//$response have all sent datas, so we can compare
 			$response = \Paylike\Transaction::fetch( $transactionId);
 			if(isset($response['transaction']['custom'])) {
 				$transactionAmount = (int)$response['transaction']['amount'];
@@ -588,9 +590,11 @@ class plgVmPaymentPaylike extends vmPSPlugin {
 				$languages = JLanguageHelper::getLanguages( 'lang_code' );
 				$locale = $languages[ $lang->getTag() ]->sef;
 				$json->publicKey = $this->publicKey;
+				$json->testMode = $method->test_mode;
 				$json->locale = $locale;
 				$json->currency = $currency;
 				$json->amount = round($priceInCents);
+				$json->exponent = $paylikeCurrency->getPaylikeCurrency($currency)['exponent'];
 				$json->customer = new stdClass();
 				$json->customer->name = $billingDetail['first_name'] . " " . $billingDetail['last_name'];
 				$json->customer->email = $billingDetail['email'];

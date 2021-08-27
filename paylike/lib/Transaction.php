@@ -5,7 +5,6 @@ namespace Paylike;
  * @package Paylike
  * Handles transaction operations.
  *
- * @version    1.0.0
  */
 if ( ! class_exists( 'Paylike\\Transaction' ) ) {
     class Transaction {
@@ -57,7 +56,7 @@ if ( ! class_exists( 'Paylike\\Transaction' ) ) {
          * @return bool|int|mixed
          */
         public static function capture( $transactionId, $data ) {
-			
+
             $adapter = Client::getAdapter();
             if ( ! $adapter ) {
                 trigger_error( 'Adapter not set!', E_USER_ERROR );
