@@ -30,6 +30,8 @@ $languageCode = $languages[ $lang->getTag() ]->sef;
 
 $data = new stdClass;
 $data->publicKey = $this->setKey($method);
+$data->testMode = $method->test_mode;
+
 $data->title = jText::_($method->title);
 $data->description = jText::_($method->description);
 $data->orderId = $billingDetail->virtuemart_order_id;
@@ -45,6 +47,8 @@ foreach ( $cart->products as $product ) {
 }
 $data->amount = round($priceInCents);
 $data->currency = $currency;
+$data->exponent = $paylikeCurrency->getPaylikeCurrency($currency)['exponent'];
+
 $data->locale = $languageCode;
 $data->customer = new stdClass();
 $data->customer->name = $billingDetail->first_name . " " . $billingDetail->last_name ;
