@@ -29,6 +29,12 @@ $languages = JLanguageHelper::getLanguages( 'lang_code' );
 $languageCode = $languages[ $lang->getTag() ]->sef;
 
 $data = new stdClass;
+
+$session = JFactory::getSession();
+$paylikeID = uniqid('paylike_');
+$session->set( 'paylike.uniqid', $paylikeID);
+$data->paylikeID = $paylikeID; // this is session ID to secure the transaction, it's fetch after to validate
+
 $data->publicKey = $this->setKey($method);
 $data->testMode = $method->test_mode;
 
@@ -123,6 +129,7 @@ jQuery(document).ready(function($) {
 			},
 			locale: datas.locale,
 			custom: {
+				paylikeID: datas.paylikeID,
 				orderId: datas.orderId,
 				orderNo: datas.orderNo,
 				products: datas.products,

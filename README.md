@@ -45,7 +45,7 @@ Under the VirtueMart Paylike payment method settings, you can:
  2. Refund
    * To refund an order move the order into refunded status.
  3. Void
-   * To void an order you can move the order into cancelled status.
+   * To void an order move the order into refunded status (if the order was not captured, then will void it).
 
 ## Available features
 1. Capture
