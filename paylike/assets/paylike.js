@@ -55,14 +55,14 @@ function popup(callback) {
 		},
 		locale: datas.locale,
 		custom: {
+			paylikeID : datas.paylikeID,
 			orderId: datas.orderId,
 			orderNo: virtuemartOrderId,
 			products: datas.products,
 			customer: datas.customer,
 			platform: datas.platform,
 			ecommerce: datas.ecommerce,
-			paylikePluginVersion: datas.version,
-			paylikeID : datas.paylikeID
+			paylikePluginVersion: datas.version
 		}
 	}, function(err, r) {
 		if (r != undefined) {
