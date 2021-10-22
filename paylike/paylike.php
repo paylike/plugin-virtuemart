@@ -134,7 +134,7 @@ class plgVmPaymentPaylike extends vmPSPlugin {
 					$hasError = false;
 				}
 			}
-			// return to cart and dont save transation values, if we dont get the right values;
+			// return to cart and don't save transaction values, if we don't get the right values;
 			if($hasError) {
 				$msg = 'Paylike Transaction not found '.$transactionId;
 				$app = JFactory::getApplication();
@@ -165,7 +165,7 @@ class plgVmPaymentPaylike extends vmPSPlugin {
 				$orderlink .= '&order_pass=' . $order['details']['BT']->order_pass;
 			}
 		}
-		//afterpaiment need specific render and scripts
+		//after-payment need specific render and scripts
 		if($method->checkout_mode === 'after') {
 			$html = $this->renderByLayout('pay_after', array(
 				'method'=>$method,
@@ -521,6 +521,7 @@ class plgVmPaymentPaylike extends vmPSPlugin {
 		$json->error = '';
 		$json->success = '0';
 		$this->setKey( $method ); // set private key for further paylike functions
+
 		if($method->checkout_mode === 'after') {
 			//$response have all sent datas, so we can compare
 			$response = \Paylike\Transaction::fetch( $transactionId);
@@ -608,7 +609,7 @@ class plgVmPaymentPaylike extends vmPSPlugin {
 					'name' => 'VirtueMart',
 					'version' => $this->getVirtuemartVersions()
 					);
-				$json->paylikeID = $paylikeID; // this is session ID to secure the transaction, i'ts fetch after to validate
+				$json->paylikeID = $paylikeID; // this is session ID to secure the transaction, it's fetch after to validate
 
 			} else if ($task === 'saveInSession') {
 
@@ -637,7 +638,7 @@ class plgVmPaymentPaylike extends vmPSPlugin {
 			$db	= JFactory::getDBO();
 			$db->updateObject($this->_tablename, $data, 'virtuemart_order_id');
 	}
-	//update âylike on update statut
+	//update paylike on update status
 	function plgVmOnUpdateOrderPayment( $order, $old_order_status ) {
 
 		if (!($method = $this->getVmPluginMethod ($order->virtuemart_paymentmethod_id))) {
