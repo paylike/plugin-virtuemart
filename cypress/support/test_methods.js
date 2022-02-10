@@ -20,10 +20,12 @@ export var TestMethods = {
                       true === Cypress.env('ENV_SETTINGS_CHECK'),
 
     /** Construct some variables to be used bellow. */
-    ShopName: 'thirtybees',
+    ShopName: 'VirtueMart',
     PaylikeName: 'paylike',
     FrontendCurrency: '',
-    ModulesAdminUrl: '/index.php?controller=AdminModules',
+    VirtuemartConfigAdminUrl: '/index.php?option=com_virtuemart&view=config',
+    // ModulesAdminUrl: '/index.php?option=com_installer&view=manage',
+    PaymentMethodsAdminUrl: '/index.php?option=com_virtuemart&view=paymentmethod',
     ManageEmailSettingUrl: '/index.php?controller=AdminEmails',
     OrdersPageAdminUrl: '/index.php?controller=AdminOrders',
 
@@ -31,49 +33,63 @@ export var TestMethods = {
      * Login to admin backend account
      */
      loginIntoAdminBackend() {
-        cy.loginIntoAccount('input[name=email]', 'input[name=passwd]', 'admin');
+        cy.loginIntoAccount('input[name=username]', 'input[name=passwd]', 'admin');
     },
     /**
      * Login to client|user frontend account
      */
      loginIntoClientAccount() {
-        cy.loginIntoAccount('#email', 'input[name=passwd]', 'client');
+        cy.loginIntoAccount('input[name=username]', 'input[name=password]', 'client');
     },
 
     /**
      * Get Shop & Paylike versions and send log data.
      */
     logVersions() {
-        cy.get('#shop_version').then(($shopVersionFromPage) => {
-            var footerText = $shopVersionFromPage.text();
-            var shopVersion = footerText.replace(/[^0-9.]/g, '');
+        /** Go to Virtuemart config page. */
+        cy.goToPage(this.VirtuemartConfigAdminUrl);
+
+        /** Get Framework version. */
+        cy.get('#status.navbar').then(($frameworkVersionFromPage) => {
+            var versionText = $frameworkVersionFromPage.text();
+            var frameworkVersion = versionText.match(/\d*\.\d*((\.\d*)?)*/g);
+            cy.wrap(frameworkVersion).as('frameworkVersion');
+        });
+
+        /** Get shop version. */
+        cy.get('.vm-installed-version').first().then(($shopVersionFromPage) => {
+            var versionText = $shopVersionFromPage.text();
+            var shopVersion = versionText.replace('VirtueMart ', '');
             cy.wrap(shopVersion).as('shopVersion');
         });
 
-        /** Go to system settings admin page. */
+        /** Go to extensions admin page. */
         cy.goToPage(this.ModulesAdminUrl);
 
-        /** Select payment gateways. */
-        cy.get('#filter_payments_gateways').click();
+        /** Search for paylike. */
+        cy.get('#filter_search').clear().type(`${this.PaylikeName}{enter}`);
 
-        cy.get('.table #anchorPaylikepayment .module_name').then($paylikeVersionFromPage => {
+        cy.get('#manageList tbody tr:nth-child(1) td:nth-child(6)').then($paylikeVersionFromPage => {
             var paylikeVersion = ($paylikeVersionFromPage.text()).replace(/[^0-9.]/g, '');
             /** Make global variable to be accessible bellow. */
             cy.wrap(paylikeVersion).as('paylikeVersion');
         });
 
         /** Get global variables and make log data request to remote url. */
-        cy.get('@shopVersion').then(shopVersion => {
-            cy.get('@paylikeVersion').then(paylikeVersion => {
+        cy.get('@frameworkVersion').then(frameworkVersion => {
+            cy.get('@shopVersion').then(shopVersion => {
+                cy.get('@paylikeVersion').then(paylikeVersion => {
 
-                cy.request('GET', this.RemoteVersionLogUrl, {
-                    key: shopVersion,
-                    tag: this.ShopName,
-                    view: 'html',
-                    ecommerce: shopVersion,
-                    plugin: paylikeVersion
-                }).then((resp) => {
-                    expect(resp.status).to.eq(200);
+                    cy.request('GET', this.RemoteVersionLogUrl, {
+                        key: shopVersion,
+                        tag: this.ShopName,
+                        view: 'html',
+                        framework: frameworkVersion,
+                        ecommerce: shopVersion,
+                        plugin: paylikeVersion
+                    }).then((resp) => {
+                        expect(resp.status).to.eq(200);
+                    });
                 });
             });
         });
@@ -106,17 +122,20 @@ export var TestMethods = {
      */
     changePaylikeCaptureMode() {
         /** Go to modules page, and select Paylike. */
-        cy.goToPage(this.ModulesAdminUrl);
+        cy.goToPage(this.PaymentMethodsAdminUrl);
 
-        /** Select payment gateways. */
-        cy.get('#filter_payments_gateways').click();
+        /** Select paylike & config its settings. */
+        cy.get('.adminlist tbody tr td:nth-child(2) a').contains(this.PaylikeName, {matchCase: false}).click();
+        cy.get('#admin-ui-tabs ul li span').contains('Configuration').click();
 
-        cy.get('a[href*="configure=paylikepayment&tab_module=payments_gateways"').click();
-        cy.wait(1000);
+        /** Make select visible. */
+        cy.get('#params_capture_mode').then(($select) => {
+            $select.attr('style', '{display: block}');
+        });
 
-        /** Change capture mode. */
-        cy.get('#PAYLIKE_CHECKOUT_MODE').select(this.CaptureMode);
-        cy.get('#module_form_submit_btn').click();
+        /** Change capture mode & save. */
+        cy.get('#params_capture_mode').select(this.CaptureMode);
+        cy.get('#toolbar-save').click();
     },
 
     /**
