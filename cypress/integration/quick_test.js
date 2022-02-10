@@ -46,7 +46,7 @@ describe('paylike plugin quick test', () => {
      */
     if (Cypress.env('ENV_STOP_EMAIL') ?? false) {
         it('modify shop settings for email notifications', () => {
-            TestMethods.deactivateEmailNotifications();
+            // TestMethods.deactivateEmailNotifications(); // not yet configured
         });
     }
 
@@ -78,7 +78,7 @@ describe('paylike plugin quick test', () => {
      */
     if (Cypress.env('ENV_STOP_EMAIL') ?? false) {
         it('roll back settings for email notifications', () => {
-            TestMethods.activateEmailNotifications();
+            // TestMethods.activateEmailNotifications();  // not yet configured
         });
     }
 
