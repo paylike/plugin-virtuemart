@@ -2,3 +2,5 @@
 .DS_Store
 vendor
 logs
+node_modules
+cypress.env.json
