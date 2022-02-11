@@ -61,3 +61,27 @@
 
     cy.wait(2000);
 });
+
+/**
+ * Remove display:none from element
+ * {String} elementSelector
+ */
+ Cypress.Commands.add('removeDisplayNoneFrom', (elementSelector) => {
+    cy.get(elementSelector).then(($selector) => {
+        $selector.attr('style', '{display: block}');
+    });
+});
+
+/**
+ * Select an option containing part of string in its text body
+ * {String} elementSelector
+ * {String} optionTextPart
+ */
+ Cypress.Commands.add('selectOptionContaining', (elementSelector, optionTextPart) => {
+    cy.get(elementSelector)
+    .find('option')
+    .contains(optionTextPart)
+    .then($option => {
+        cy.get(elementSelector).select($option.text());
+    });
+});
