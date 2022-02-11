@@ -24,10 +24,11 @@ export var TestMethods = {
     PaylikeName: 'paylike',
     FrontendCurrency: '',
     VirtuemartConfigAdminUrl: '/index.php?option=com_virtuemart&view=config',
-    // ModulesAdminUrl: '/index.php?option=com_installer&view=manage',
     PaymentMethodsAdminUrl: '/index.php?option=com_virtuemart&view=paymentmethod',
-    // ManageEmailSettingUrl: '/index.php?controller=AdminEmails',
-    OrdersPageAdminUrl: '/index.php?controller=AdminOrders',
+    // ManageEmailSettingUrl: '',
+    OrdersPageAdminUrl: '/index.php?option=com_virtuemart&view=orders',
+    PaylikeOrderStatusForCapture: '',
+    PaylikeOrderStatusForRefund: '',
 
     /**
      * Login to admin backend account
@@ -165,16 +166,6 @@ export var TestMethods = {
         cy.get('input[value="Change Currency"]').click();
         cy.wait(1000);
 
-        /** Change currency & wait for products price to finish update. */
-        // cy.get('#blockcurrencies .dropdown-toggle').click();
-        // cy.get('#blockcurrencies ul a').each(($listLink) => {
-        //     if ($listLink.text().includes(currency)) {
-        //         cy.get($listLink).click();
-        //         /** Make this currency globally available. */
-        //         this.FrontendCurrency = currency;
-        //     }
-        // });
-
         /** Add to cart random product. */
         var randomInt = PaylikeTestHelper.getRandomInt(/*max*/ 6);
         cy.get('span.addtocart-button > .addtocart-button').eq(randomInt).click();
@@ -191,20 +182,17 @@ export var TestMethods = {
 
         /** Accept terms of services. */
         cy.get('#tos').click();
+
+        /** Get order total amount. */
+        cy.get('span.PricebillTotal').then($totalAmount => {
+            var orderTotalAmount = PaylikeTestHelper.filterAndGetAmountInMinor($totalAmount, currency);
+            cy.wrap(orderTotalAmount).as('orderTotalAmount');
+        });
+
         cy.wait(1000);
 
         /** Confirm checkout. */
         cy.get('#checkoutFormSubmit').click();
-
-
-        // /** Verify amount. */
-        // cy.get('.post_payment_order_total_title').then(($totalAmount) => {
-        //     var expectedAmount = PaylikeTestHelper.filterAndGetAmountInMinor($totalAmount, currency);
-        //     cy.window().then(($win) => {
-        //         expect(expectedAmount).to.eq(Number($win.amount))
-        //     })
-        // });
-
 
         /**
          * Fill in Paylike popup.
@@ -213,6 +201,18 @@ export var TestMethods = {
 
         /** Check if order was paid. */
         cy.get('#paylike-after-info').should('be.visible');
+
+        /**
+         * need to be fixed - paylike module uses default shop currency
+         * as a result, changing currency from frontend has no effect
+         */
+        /** Verify amount. */
+        // cy.get('.post_payment_order_total').then(($totalAmount) => {
+        //     var expectedAmount = PaylikeTestHelper.filterAndGetAmountInMinor($totalAmount, currency);
+        //     cy.get('@orderTotalAmount').then(orderTotalAmount => {
+        //         expect(expectedAmount).to.eq(orderTotalAmount);
+        //     });
+        // });
     },
 
     /**
@@ -227,6 +227,12 @@ export var TestMethods = {
             cy.goToPage(this.OrdersPageAdminUrl);
         }
 
+        /** Go to admin & set global order statuses to be used. */
+        this.setPaylikeOrderStatuses();
+
+        /** Go to orders page. */
+        cy.goToPage(this.OrdersPageAdminUrl);
+
         /** Click on first (latest in time) order from orders table. */
         cy.get('.adminlist tbody tr td:nth-child(2) a').first().click();
 
@@ -237,7 +243,7 @@ export var TestMethods = {
         if ('Delayed' === this.CaptureMode) {
             this.paylikeActionOnOrderAmount('capture');
         } else {
-            this.paylikeActionOnOrderAmount('refund', this.FrontendCurrency);
+            this.paylikeActionOnOrderAmount('refund');
         }
     },
 
@@ -270,26 +276,46 @@ export var TestMethods = {
     /**
      * Capture an order amount
      * @param {String} paylikeAction
-     * @param {String} currency
-     * @param {Boolean} partialRefund
      */
-     paylikeActionOnOrderAmount(paylikeAction, currency = '', partialRefund = false) {
-        cy.get('#paylike_action').select(paylikeAction);
+     paylikeActionOnOrderAmount(paylikeAction) {
+        cy.get('a.show_element.btn.btn-small').click();
+        cy.removeDisplayNoneFrom('#order_items_status');
 
-        /** Enter full amount for refund. */
-        if ('refund' === paylikeAction) {
-            cy.get('#total_order  .amount').then(($totalAmount) => {
-                var minorAmount = PaylikeTestHelper.filterAndGetAmountInMajorUnit($totalAmount, currency);
-                cy.get('input[name=paylike_amount_to_refund]').clear().type(`${minorAmount}`);
-                cy.get('input[name=paylike_refund_reason]').clear().type('automatic refund');
-            });
-        }
+        /** Select proper order status using global saved statuses. */
+        cy.get('@paylikeOrderStatusForCapture').then(paylikeOrderStatusForCapture => {
+            cy.get('@paylikeOrderStatusForRefund').then(paylikeOrderStatusForRefund => {
+                /** Default to capture. */
+                var statusForOrder = paylikeOrderStatusForCapture;
 
-        cy.get('#submit_paylike_action').click();
-        cy.wait(1000);
-        cy.get('#alert.alert-info').should('not.exist');
-        cy.get('#alert.alert-warning').should('not.exist');
-        cy.get('#alert.alert-danger').should('not.exist');
+                if ('refund' === paylikeAction) {
+                    statusForOrder = paylikeOrderStatusForRefund;
+                }
+
+                cy.selectOptionContaining('#order_items_status', statusForOrder);
+                cy.get('a.orderStatFormSubmit').click();
+                cy.wait(1000);
+            })
+        })
+
     },
 
+    /**
+     * Set Paylike order statuses from settings
+     */
+     setPaylikeOrderStatuses() {
+        /** Go to modules page, and select Paylike. */
+        cy.goToPage(this.PaymentMethodsAdminUrl);
+
+        /** Select paylike & config its settings. */
+        cy.get('.adminlist tbody tr td:nth-child(2) a').contains(this.PaylikeName, {matchCase: false}).click();
+        cy.get('#admin-ui-tabs ul li span').contains('Configuration').click();
+
+        /** Get order status for capture and refund. */
+        cy.get('#params_status_capture_chzn a span').then($captureStatus => {
+            cy.wrap($captureStatus.text()).as('paylikeOrderStatusForCapture');
+        });
+        cy.get('#params_status_refunded_chzn a span').then($refundStatus => {
+            cy.wrap($refundStatus.text()).as('paylikeOrderStatusForRefund');
+        });
+    },
 }
