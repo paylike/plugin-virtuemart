@@ -3,7 +3,6 @@
 'use strict';
 
 import { TestMethods } from '../support/test_methods.js';
-import { PaylikeTestHelper } from '../support/test_helper.js';
 
 describe('paylike plugin quick test', () => {
     /**
