@@ -26,7 +26,7 @@ export var TestMethods = {
     VirtuemartConfigAdminUrl: '/index.php?option=com_virtuemart&view=config',
     // ModulesAdminUrl: '/index.php?option=com_installer&view=manage',
     PaymentMethodsAdminUrl: '/index.php?option=com_virtuemart&view=paymentmethod',
-    ManageEmailSettingUrl: '/index.php?controller=AdminEmails',
+    // ManageEmailSettingUrl: '/index.php?controller=AdminEmails',
     OrdersPageAdminUrl: '/index.php?controller=AdminOrders',
 
     /**
@@ -129,9 +129,7 @@ export var TestMethods = {
         cy.get('#admin-ui-tabs ul li span').contains('Configuration').click();
 
         /** Make select visible. */
-        cy.get('#params_capture_mode').then(($select) => {
-            $select.attr('style', '{display: block}');
-        });
+        cy.removeDisplayNoneFrom('#params_capture_mode');
 
         /** Change capture mode & save. */
         cy.get('#params_capture_mode').select(this.CaptureMode);
@@ -146,48 +144,67 @@ export var TestMethods = {
         /** Go to store frontend. */
         cy.goToPage(this.StoreUrl);
 
-        /** Change currency & wait for products price to finish update. */
-        cy.get('#blockcurrencies .dropdown-toggle').click();
-        cy.get('#blockcurrencies ul a').each(($listLink) => {
-            if ($listLink.text().includes(currency)) {
-                cy.get($listLink).click();
-                /** Make this currency globally available. */
-                this.FrontendCurrency = currency;
-            }
-        });
-        cy.wait(1000);
-
-        /** Make all add-to-cart buttons visible. */
-        PaylikeTestHelper.setVisibleOn('.product_list.grid .button-container');
-
-        /** Add to cart random product. */
-        var randomInt = PaylikeTestHelper.getRandomInt(/*max*/ 6);
-        cy.get('.ajax_add_to_cart_button').eq(randomInt).click();
-
-        /** Proceed to checkout. */
-        cy.get('.next a').click();
-        cy.get('.standard-checkout').click();
-
         /**
          * Client frontend login.
          */
-        this.loginIntoClientAccount();
+         this.loginIntoClientAccount();
 
-        /** Continue checkout. */
-        cy.get('button[name=processAddress]').click();
-        cy.get('#cgv').click();
-        cy.get('.standard-checkout').click();
+        /** Click on currencies. */
+        cy.get('.moduletable_js h3').contains('Currencies Selector', {matchCase: false}).then(($heading) => {
+            $heading.children('a').trigger('click');
+        })
 
-        /** Verify amount. */
-        cy.get('#total_price').then(($totalAmount) => {
-            var expectedAmount = PaylikeTestHelper.filterAndGetAmountInMinor($totalAmount, currency);
-            cy.window().then(($win) => {
-                expect(expectedAmount).to.eq(Number($win.amount))
-            })
+        /** Make select visible. */
+        cy.removeDisplayNoneFrom('#virtuemart_currency_id');
+
+        /** Get currency name. */
+        var currencyName = PaylikeTestHelper.getCurrencyName(currency);
+
+        /** Select by option text. */
+        cy.selectOptionContaining('#virtuemart_currency_id', currencyName);
+        cy.get('input[value="Change Currency"]').click();
+        cy.wait(1000);
+
+        /** Change currency & wait for products price to finish update. */
+        // cy.get('#blockcurrencies .dropdown-toggle').click();
+        // cy.get('#blockcurrencies ul a').each(($listLink) => {
+        //     if ($listLink.text().includes(currency)) {
+        //         cy.get($listLink).click();
+        //         /** Make this currency globally available. */
+        //         this.FrontendCurrency = currency;
+        //     }
+        // });
+
+        /** Add to cart random product. */
+        var randomInt = PaylikeTestHelper.getRandomInt(/*max*/ 6);
+        cy.get('span.addtocart-button > .addtocart-button').eq(randomInt).click();
+        cy.wait(1000);
+
+        /** Proceed to checkout. */
+        cy.get('#fancybox-wrap').should('be.visible');
+        cy.get('.vm-btn-primary.showcart').click();
+
+        /** Choose Paylike. */
+        cy.get('.vm-payment-plugin-single').contains(this.PaylikeName, {matchCase: false}).then(($div) => {
+            $div.children('input').trigger('click');
         });
 
-        /** Click on Paylike. */
-        cy.get('#paylike-btn').click();
+        /** Accept terms of services. */
+        cy.get('#tos').click();
+        cy.wait(1000);
+
+        /** Confirm checkout. */
+        cy.get('#checkoutFormSubmit').click();
+
+
+        // /** Verify amount. */
+        // cy.get('.post_payment_order_total_title').then(($totalAmount) => {
+        //     var expectedAmount = PaylikeTestHelper.filterAndGetAmountInMinor($totalAmount, currency);
+        //     cy.window().then(($win) => {
+        //         expect(expectedAmount).to.eq(Number($win.amount))
+        //     })
+        // });
+
 
         /**
          * Fill in Paylike popup.
@@ -195,7 +212,7 @@ export var TestMethods = {
         PaylikeTestHelper.fillAndSubmitPaylikePopup();
 
         /** Check if order was paid. */
-        cy.get('.alert-success').should('contain.text', 'Congratulations, your payment has been approved');
+        cy.get('#paylike-after-info').should('be.visible');
     },
 
     /**
@@ -211,7 +228,7 @@ export var TestMethods = {
         }
 
         /** Click on first (latest in time) order from orders table. */
-        cy.get('.table.order tbody tr').first().click();
+        cy.get('.adminlist tbody tr td:nth-child(2) a').first().click();
 
         /**
          * If CaptureMode='Delayed', set shipped on order status & make 'capture'
