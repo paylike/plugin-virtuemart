@@ -68,6 +68,16 @@ export let PaylikeTestHelper = {
     },
 
     /**
+     * Get currency name based on code provided
+     *
+     * @param {String} currencyCode
+     */
+     getCurrencyName(currencyCode) {
+        var currencyObject = PaylikeCurrencies.get_paylike_currency(currencyCode);
+        return currencyObject['currency'];
+    },
+
+    /**
      * Set position=relative on selected element
      * Useful when an element cover another element
      *
