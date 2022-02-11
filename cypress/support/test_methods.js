@@ -22,13 +22,10 @@ export var TestMethods = {
     /** Construct some variables to be used bellow. */
     ShopName: 'VirtueMart',
     PaylikeName: 'paylike',
-    FrontendCurrency: '',
     VirtuemartConfigAdminUrl: '/index.php?option=com_virtuemart&view=config',
     PaymentMethodsAdminUrl: '/index.php?option=com_virtuemart&view=paymentmethod',
     // ManageEmailSettingUrl: '',
     OrdersPageAdminUrl: '/index.php?option=com_virtuemart&view=orders',
-    PaylikeOrderStatusForCapture: '',
-    PaylikeOrderStatusForRefund: '',
 
     /**
      * Login to admin backend account
