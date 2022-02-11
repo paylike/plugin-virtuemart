@@ -165,7 +165,7 @@ export var TestMethods = {
 
         /** Add to cart random product. */
         var randomInt = PaylikeTestHelper.getRandomInt(/*max*/ 6);
-        cy.get('span.addtocart-button > .addtocart-button').eq(randomInt).click();
+        cy.get('div.browse-view input.addtocart-button').eq(randomInt).click();
         cy.wait(1000);
 
         /** Proceed to checkout. */
