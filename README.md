@@ -11,9 +11,9 @@ Version `2.*` is not backward compatible with version `1.*` . You need to remove
 
 ## Supported VirtueMart versions
 
+[![Last succesfull test](https://log.derikon.ro/api/v1/log/read?tag=virtuemart&view=svg&label=VirtueMart&key=ecommerce&background=f7d43f)](https://log.derikon.ro/api/v1/log/read?tag=virtuemart&view=html)
+
 * The plugin has been tested with most versions of Virtuemart at every iteration. We recommend using the latest version of Virtuemart, but if that is not possible for some reason, test the plugin with your Virtuemart version and it would probably function properly.
-* Virtuemart
- version last tested on: *3.8.9*
 
 ## Installation
 
