@@ -20,7 +20,7 @@ export var TestMethods = {
                       true === Cypress.env('ENV_SETTINGS_CHECK'),
 
     /** Construct some variables to be used bellow. */
-    ShopName: 'VirtueMart',
+    ShopName: 'virtuemart',
     PaylikeName: 'paylike',
     VirtuemartConfigAdminUrl: '/index.php?option=com_virtuemart&view=config',
     ModulesAdminUrl: '/index.php?option=com_installer&view=manage',
@@ -52,7 +52,7 @@ export var TestMethods = {
         cy.get('#status.navbar').then(($frameworkVersionFromPage) => {
             var versionText = $frameworkVersionFromPage.text();
             var frameworkVersion = versionText.match(/\d*\.\d*((\.\d*)?)*/g);
-            cy.wrap(frameworkVersion).as('frameworkVersion');
+            cy.wrap(frameworkVersion[0]).as('frameworkVersion');
         });
 
         /** Get shop version. */
