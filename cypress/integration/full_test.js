@@ -4,7 +4,7 @@
 
 import { TestMethods } from '../support/test_methods.js';
 
-describe('paylike plugin quick test', () => {
+describe('paylike plugin full test', () => {
     /**
      * Go to backend site admin if necessary
      */
