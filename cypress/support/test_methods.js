@@ -23,6 +23,7 @@ export var TestMethods = {
     ShopName: 'VirtueMart',
     PaylikeName: 'paylike',
     VirtuemartConfigAdminUrl: '/index.php?option=com_virtuemart&view=config',
+    ModulesAdminUrl: '/index.php?option=com_installer&view=manage',
     PaymentMethodsAdminUrl: '/index.php?option=com_virtuemart&view=paymentmethod',
     // ManageEmailSettingUrl: '',
     OrdersPageAdminUrl: '/index.php?option=com_virtuemart&view=orders',
