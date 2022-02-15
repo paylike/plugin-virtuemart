@@ -186,7 +186,7 @@ export var TestMethods = {
             cy.wrap(orderTotalAmount).as('orderTotalAmount');
         });
 
-        cy.wait(1000);
+        cy.wait(2000);
 
         /** Confirm checkout. */
         cy.get('#checkoutFormSubmit').click();
@@ -195,6 +195,8 @@ export var TestMethods = {
          * Fill in Paylike popup.
          */
         PaylikeTestHelper.fillAndSubmitPaylikePopup();
+
+        cy.wait(1000);
 
         /** Check if order was paid. */
         cy.get('#paylike-after-info').should('be.visible');
@@ -226,6 +228,8 @@ export var TestMethods = {
 
         /** Go to admin & set global order statuses to be used. */
         this.setPaylikeOrderStatuses();
+
+        cy.wait(1000);
 
         /** Go to orders page. */
         cy.goToPage(this.OrdersPageAdminUrl);
