@@ -153,7 +153,7 @@ jQuery(document).ready(function($) {
 						data: payData,
 						success: function(data) {
 							if(data.success =='1') {
-								$('#paylike-after-info').toggleClass('.paylike-info-hide');
+								$('#paylike-after-info').toggleClass('paylike-info-hide');
 								$('#paylike-temp-info').remove();
 							} else {
 								alert(data.error);
