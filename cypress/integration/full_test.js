@@ -40,7 +40,9 @@ describe('paylike plugin full test', () => {
 
         /** Make Instant payments */
         for (var currency of currenciesToTest) {
-            TestMethods.changeShopCurrencyFromAdmin(currency);
+            it(`Change shop currency from admin to "${currency}"`, () => {
+                TestMethods.changeShopCurrencyFromAdmin(currency);
+            });
             TestMethods.payWithSelectedCurrency(currency, contextFlag);
         }
     });
@@ -57,7 +59,9 @@ describe('paylike plugin full test', () => {
              * HARDCODED currency
              */
             if ('USD' == currency || 'RON' == currency) {
-                TestMethods.changeShopCurrencyFromAdmin(currency);
+                it(`Change shop currency from admin to "${currency}"`, () => {
+                    TestMethods.changeShopCurrencyFromAdmin(currency);
+                });
                 TestMethods.payWithSelectedCurrency(currency, contextFlag);
             }
         }
