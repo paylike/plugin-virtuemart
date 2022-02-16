@@ -25,7 +25,7 @@ export var TestMethods = {
     VirtuemartConfigAdminUrl: '/index.php?option=com_virtuemart&view=config',
     ModulesAdminUrl: '/index.php?option=com_installer&view=manage',
     PaymentMethodsAdminUrl: '/index.php?option=com_virtuemart&view=paymentmethod',
-    // ManageEmailSettingUrl: '',
+    ShopAdminUrl: '/index.php?option=com_virtuemart&view=user&task=editshop', // used for change currency
     OrdersPageAdminUrl: '/index.php?option=com_virtuemart&view=orders',
 
     /**
@@ -132,7 +132,10 @@ export var TestMethods = {
 
         /** Change capture mode & save. */
         cy.get('#params_capture_mode').select(this.CaptureMode);
-        cy.get('#toolbar-save').click();
+
+        PaylikeTestHelper.setPositionRelativeOn('.navbar-fixed-top');
+
+        cy.get('#toolbar-save > .button-save').click();
     },
 
     /**
@@ -159,10 +162,14 @@ export var TestMethods = {
         /** Get currency name. */
         var currencyName = PaylikeTestHelper.getCurrencyName(currency);
 
-        /** Select by option text. */
-        cy.selectOptionContaining('#virtuemart_currency_id', currencyName);
-        cy.get('input[value="Change Currency"]').click();
-        cy.wait(1000);
+        /** Select currency by option text. */
+        /**
+         * Disabled for the moment.
+         * We will change currency from admin shop section by changeShopCurrencyFromAdmin()
+         */
+        // cy.selectOptionContaining('#virtuemart_currency_id', currencyName);
+        // cy.get('input[value="Change Currency"]').click();
+        // cy.wait(1000);
 
         /** Add to cart random product. */
         var randomInt = PaylikeTestHelper.getRandomInt(/*max*/ 6);
@@ -202,17 +209,13 @@ export var TestMethods = {
         /** Check if order was paid. */
         cy.get('#paylike-after-info').should('be.visible');
 
-        /**
-         * need to be fixed - paylike module uses default shop currency
-         * as a result, changing currency from frontend has no effect
-         */
         /** Verify amount. */
-        // cy.get('.post_payment_order_total').then(($totalAmount) => {
-        //     var expectedAmount = PaylikeTestHelper.filterAndGetAmountInMinor($totalAmount, currency);
-        //     cy.get('@orderTotalAmount').then(orderTotalAmount => {
-        //         expect(expectedAmount).to.eq(orderTotalAmount);
-        //     });
-        // });
+        cy.get('.post_payment_order_total').then(($totalAmount) => {
+            var expectedAmount = PaylikeTestHelper.filterAndGetAmountInMinor($totalAmount, currency);
+            cy.get('@orderTotalAmount').then(orderTotalAmount => {
+                expect(expectedAmount).to.eq(orderTotalAmount);
+            });
+        });
     },
 
     /**
@@ -319,5 +322,27 @@ export var TestMethods = {
         cy.get('#params_status_refunded_chzn a span').then($refundStatus => {
             cy.wrap($refundStatus.text()).as('paylikeOrderStatusForRefund');
         });
+    },
+
+    /**
+     * Change shop currency from admin
+     * (temporary solution until the plugin will process chosen frontend currency)
+     */
+     changeShopCurrencyFromAdmin(currency) {
+        /** Go to edit shop page. */
+        cy.goToPage(this.ShopAdminUrl);
+
+        /** Make select visible. */
+        cy.removeDisplayNoneFrom('#vendor_currency');
+
+        /** Currency name. */
+        var currentCurrencyName = PaylikeTestHelper.getCurrencyName(currency);
+
+        /** Select currency & save. */
+        cy.get('#vendor_currency').select(currentCurrencyName);
+
+        PaylikeTestHelper.setPositionRelativeOn('.navbar-fixed-top');
+
+        cy.get('#toolbar-save > .button-save').click();
     },
 }

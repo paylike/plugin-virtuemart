@@ -59,6 +59,13 @@ describe('paylike plugin quick test', () => {
     }
 
     /**
+     * Change shop currency
+     */
+    it('Change shop currency', () => {
+        TestMethods.changeShopCurrencyFromAdmin(Cypress.env('ENV_CURRENCY_TO_CHANGE_WITH'));
+    });
+
+    /**
      * Make a payment
      */
     it('makes a payment with Paylike', () => {
