@@ -329,22 +329,20 @@ export var TestMethods = {
      * (temporary solution until the plugin will process chosen frontend currency)
      */
      changeShopCurrencyFromAdmin(currency) {
-        it(`Change shop currency from admin to "${currency}"`, () => {
-            /** Go to edit shop page. */
-            cy.goToPage(this.ShopAdminUrl);
+        /** Go to edit shop page. */
+        cy.goToPage(this.ShopAdminUrl);
 
-            /** Make select visible. */
-            cy.removeDisplayNoneFrom('#vendor_currency');
+        /** Make select visible. */
+        cy.removeDisplayNoneFrom('#vendor_currency');
 
-            /** Currency name. */
-            var currentCurrencyName = PaylikeTestHelper.getCurrencyName(currency);
+        /** Currency name. */
+        var currentCurrencyName = PaylikeTestHelper.getCurrencyName(currency);
 
-            /** Select currency & save. */
-            cy.get('#vendor_currency').select(currentCurrencyName);
+        /** Select currency & save. */
+        cy.get('#vendor_currency').select(currentCurrencyName);
 
-            PaylikeTestHelper.setPositionRelativeOn('.navbar-fixed-top');
+        PaylikeTestHelper.setPositionRelativeOn('.navbar-fixed-top');
 
-            cy.get('#toolbar-save > .button-save').click();
-        });
+        cy.get('#toolbar-save > .button-save').click();
     },
 }
