@@ -10,6 +10,7 @@ As you can see the plugin is bundled with Cypress testing on this repository. Yo
 * You need to have Paylike module installed and configured (**test keys** required)
 * You need to have some other currencies configured in store, then set them in `cypress.env.json` file (these will be used to make payments with every currency specified)
 * You also need to have a test client account with previous purchases and an admin account for which you set the credentials in the `cypress.env.json` file
+* *For testing purpose, product stock management and sending order emails need to be disabled.*
 
 ## Getting started
 
@@ -22,11 +23,9 @@ As you can see the plugin is bundled with Cypress testing on this repository. Yo
 2. Copy and rename `cypress.env.json.example` file in the root folder and fill the data as explained bellow:
 ```json
 {
-    "ENV_HTTP_AUTH_ENABLED": false, // if you have HTTP auth when accessing website
+    "ENV_HTTP_AUTH_ENABLED": false, // 'true' if you have HTTP auth when accessing website
     "ENV_HTTP_USER": "", // if you have HTTP auth when accessing website
     "ENV_HTTP_PASS": "",
-    "ENV_COOKIE_HASH": "", // name of the cookie (it can be name like 'cookie_name' or a hash like '6bte5482...')
-    "ENV_STORE_URL": "", // http(s)://baseUrl
     "ENV_ADMIN_URL": "", // like http(s)://baseUrl/administrator
     "ENV_CLIENT_USER": "", // frontend user
     "ENV_CLIENT_PASS": "",
@@ -36,9 +35,6 @@ As you can see the plugin is bundled with Cypress testing on this repository. Yo
     "ENV_CURRENCY_TO_CHANGE_WITH": "USD",
     "ENV_CURRENCIES_TO_TEST": ["USD", "EUR"], // currencies used to make payments with in Full test
     "ENV_CAPTURE_MODE": "Delayed", // Instant/Delayed (write with capital first letter )
-    "ENV_STOP_EMAIL": false, // if true => deactivate sending email on order creation / status change
-    "ENV_LOG_VERSION": false, // if true => sends framework/shop & paylike modules versions remotely
-    "ENV_SETTINGS_CHECK": false, // if true => change paylike capture mode as is specified in ENV_CAPTURE_MODE variable
     "ENV_CARD_NUMBER": 4100000000000000,
     "ENV_CARD_EXPIRY": 1226,
     "ENV_CARD_CVV": 654
