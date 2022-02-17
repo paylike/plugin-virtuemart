@@ -9,9 +9,10 @@ describe('paylike plugin quick test', () => {
      * Go to backend site admin if necessary
      */
     before(() => {
-        if (TestMethods.NeedToAdminLogin) {
-            cy.goToPage(Cypress.env('ENV_ADMIN_URL'));
-        }
+        cy.goToPage(Cypress.env('ENV_ADMIN_URL'));
+        TestMethods.loginIntoAdminBackend();
+        cy.goToPage(TestMethods.StoreUrl);
+        TestMethods.loginIntoClientAccount();
     });
 
     /**
@@ -19,44 +20,19 @@ describe('paylike plugin quick test', () => {
      * - preserve cookies between tests
      */
     beforeEach(() => {
-        Cypress.Cookies.preserveOnce(Cypress.env('ENV_COOKIE_HASH'));
+        Cypress.Cookies.defaults({
+            preserve: (cookie) => {
+              return true;
+            }
+        });
     });
 
     /**
-     * Login into admin if necessary.
+     * Modify Paylike capture mode
      */
-    if (TestMethods.NeedToAdminLogin) {
-        it('login into admin backend', () => {
-            TestMethods.loginIntoAdminBackend();
-        });
-    }
-
-    /**
-     * Get shop & Paylike versions and send log data.
-     */
-    if (Cypress.env('ENV_LOG_VERSION') ?? false) {
-        it('log shop & paylike versions remotely', () => {
-            TestMethods.logVersions();
-        });
-    }
-
-    /**
-     * Modify shop email settings (disable notifications)
-     */
-    if (Cypress.env('ENV_STOP_EMAIL') ?? false) {
-        it('modify shop settings for email notifications', () => {
-            // TestMethods.deactivateEmailNotifications(); // not yet configured
-        });
-    }
-
-    /**
-     * Modify Paylike settings
-     */
-    if (Cypress.env('ENV_SETTINGS_CHECK') ?? false) {
-        it('modify Paylike settings for capture mode', () => {
-            TestMethods.changePaylikeCaptureMode();
-        });
-    }
+    it('modify Paylike settings for capture mode', () => {
+        TestMethods.changePaylikeCaptureMode();
+    });
 
     /**
      * Change shop currency
@@ -65,27 +41,16 @@ describe('paylike plugin quick test', () => {
         TestMethods.changeShopCurrencyFromAdmin(Cypress.env('ENV_CURRENCY_TO_CHANGE_WITH'));
     });
 
-    /**
-     * Make a payment
-     */
-    it('makes a payment with Paylike', () => {
-        TestMethods.makePaymentFromFrontend(Cypress.env('ENV_CURRENCY_TO_CHANGE_WITH'));
+    /** Pay and process order. */
+    /** Capture */
+    TestMethods.payWithSelectedCurrency(Cypress.env('ENV_CURRENCY_TO_CHANGE_WITH'), 'capture');
+
+    /** Refund last created order (previously captured). */
+    it('Process last order captured from admin panel to be refunded', () => {
+        TestMethods.processOrderFromAdmin('refund');
     });
 
-    /**
-     * Process last order from admin panel
-     */
-    it('process (capture/refund/void) an order from admin panel', () => {
-        TestMethods.processOrderFromAdmin();
-    });
-
-    /**
-     * Modify shop email settings (enable notifications)
-     */
-    if (Cypress.env('ENV_STOP_EMAIL') ?? false) {
-        it('roll back settings for email notifications', () => {
-            // TestMethods.activateEmailNotifications();  // not yet configured
-        });
-    }
+    /** Void */
+    TestMethods.payWithSelectedCurrency(Cypress.env('ENV_CURRENCY_TO_CHANGE_WITH'), 'void');
 
 }); // describe

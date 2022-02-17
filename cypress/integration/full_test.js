@@ -6,10 +6,13 @@ import { TestMethods } from '../support/test_methods.js';
 
 describe('paylike plugin full test', () => {
     /**
-     * Go to backend site admin if necessary
+     * Login into admin and frontend to store cookies.
      */
     before(() => {
         cy.goToPage(Cypress.env('ENV_ADMIN_URL'));
+        TestMethods.loginIntoAdminBackend();
+        cy.goToPage(TestMethods.StoreUrl);
+        TestMethods.loginIntoClientAccount();
     });
 
     /**
@@ -17,19 +20,15 @@ describe('paylike plugin full test', () => {
      * - preserve cookies between tests
      */
     beforeEach(() => {
-        Cypress.Cookies.preserveOnce(Cypress.env('ENV_COOKIE_HASH'));
-    });
-
-    /**
-     * Login into admin if necessary.
-     */
-    it('login into admin backend', () => {
-        TestMethods.loginIntoAdminBackend();
+        Cypress.Cookies.defaults({
+            preserve: (cookie) => {
+              return true;
+            }
+        });
     });
 
     let captureModes = ['Instant', 'Delayed'];
     let currenciesToTest = Cypress.env('ENV_CURRENCIES_TO_TEST');
-    let contextFlag = true;
 
     context(`make payments in "${captureModes[0]}" mode`, () => {
         /** Modify Paylike settings. */
@@ -40,10 +39,17 @@ describe('paylike plugin full test', () => {
 
         /** Make Instant payments */
         for (var currency of currenciesToTest) {
-            it(`Change shop currency from admin to "${currency}"`, () => {
-                TestMethods.changeShopCurrencyFromAdmin(currency);
-            });
-            TestMethods.payWithSelectedCurrency(currency, contextFlag);
+            TestMethods.payWithSelectedCurrency(currency, 'refund');
+
+            /** Send log if currency = DKK. */
+            /**
+             * HARDCODED currency
+             */
+            if ('DKK' == currency) {
+                it('log shop & paylike versions remotely', () => {
+                    this.logVersions();
+                });
+            }
         }
     });
 
@@ -59,10 +65,9 @@ describe('paylike plugin full test', () => {
              * HARDCODED currency
              */
             if ('USD' == currency || 'RON' == currency) {
-                it(`Change shop currency from admin to "${currency}"`, () => {
-                    TestMethods.changeShopCurrencyFromAdmin(currency);
-                });
-                TestMethods.payWithSelectedCurrency(currency, contextFlag);
+                TestMethods.payWithSelectedCurrency(currency, 'capture');
+                /** In "delayed" mode we check "void" action too. */
+                TestMethods.payWithSelectedCurrency(currency, 'void');
             }
         }
     });
