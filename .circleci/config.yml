@@ -9,22 +9,17 @@ workflows:
     jobs:
       # "cypress" is the name of the imported orb
       # "run" is the name of the job defined in Cypress orb
-      - quick_test:
-          name: Run QUICK tests
+      - cypress/run:
           context:
             - paylike
-          command: npx cypress run --spec cypress/integration/quick_test.js
-          filters:
-            branches:
-              only:
-                - master
-      - full_test:
-          name: Run FULL tests
-          context:
-            - paylike
-          requires:
-            - quick_test
-          command: npx cypress run --spec cypress/integration/full_test.js
+          steps:
+            - run:
+                name: "Running QUICK tests"
+                command: npx cypress run --spec cypress/integration/quick_test.js
+            - run:
+                name: "Running FULL tests"
+                command: npx cypress run --spec cypress/integration/full_test.js
+                when: on_success
           filters:
             branches:
               only:
