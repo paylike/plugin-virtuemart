@@ -29,3 +29,14 @@ workflows:
             branches:
               only:
                 - master
+      - cypress/run:
+          name: Run_LOG_VERSION_remotely
+          requires:
+            - Run_FULL_tests
+          context:
+            - paylike
+          spec: cypress/integration/log_version.js
+          filters:
+            branches:
+              only:
+                - master

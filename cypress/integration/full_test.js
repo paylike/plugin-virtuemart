@@ -61,10 +61,4 @@ describe('paylike plugin full test', () => {
             }
         }
     });
-
-    /** Send log after full test finished. */
-    it('log shop & paylike versions remotely', () => {
-        TestMethods.logVersions();
-    });
-
 }); // describe

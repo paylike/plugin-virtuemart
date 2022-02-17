@@ -6,7 +6,7 @@ import { TestMethods } from '../support/test_methods.js';
 
 describe('paylike plugin quick test', () => {
     /**
-     * Go to backend site admin if necessary
+     * Login into admin and frontend to store cookies.
      */
     before(() => {
         cy.goToPage(Cypress.env('ENV_ADMIN_URL'));
