@@ -40,16 +40,6 @@ describe('paylike plugin full test', () => {
         /** Make Instant payments */
         for (var currency of currenciesToTest) {
             TestMethods.payWithSelectedCurrency(currency, 'refund');
-
-            /** Send log if currency = DKK. */
-            /**
-             * HARDCODED currency
-             */
-            if ('DKK' == currency) {
-                it('log shop & paylike versions remotely', () => {
-                    TestMethods.logVersions();
-                });
-            }
         }
     });
 
@@ -70,6 +60,11 @@ describe('paylike plugin full test', () => {
                 TestMethods.payWithSelectedCurrency(currency, 'void');
             }
         }
+    });
+
+    /** Send log after full test finished. */
+    it('log shop & paylike versions remotely', () => {
+        TestMethods.logVersions();
     });
 
 }); // describe
