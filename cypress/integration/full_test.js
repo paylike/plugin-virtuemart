@@ -47,7 +47,7 @@ describe('paylike plugin full test', () => {
              */
             if ('DKK' == currency) {
                 it('log shop & paylike versions remotely', () => {
-                    this.logVersions();
+                    TestMethods.logVersions();
                 });
             }
         }
