@@ -10,7 +10,7 @@ export var TestMethods = {
     StoreUrl: (Cypress.env('ENV_ADMIN_URL').match(/^(?:http(?:s?):\/\/)?(?:[^@\n]+@)?(?:www\.)?([^:\/\n?]+)/im))[0],
     AdminUrl: Cypress.env('ENV_ADMIN_URL'),
     RemoteVersionLogUrl: Cypress.env('REMOTE_LOG_URL'),
-    CaptureMode: Cypress.env('ENV_CAPTURE_MODE'),
+    CaptureMode: 'Delayed',
 
     /** Construct some variables to be used bellow. */
     ShopName: 'virtuemart',

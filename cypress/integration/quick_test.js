@@ -27,6 +27,8 @@ describe('paylike plugin quick test', () => {
         });
     });
 
+    let currency = Cypress.env('ENV_CURRENCY_TO_CHANGE_WITH');
+
     /**
      * Modify Paylike capture mode
      */
@@ -38,12 +40,12 @@ describe('paylike plugin quick test', () => {
      * Change shop currency
      */
     it('Change shop currency', () => {
-        TestMethods.changeShopCurrencyFromAdmin(Cypress.env('ENV_CURRENCY_TO_CHANGE_WITH'));
+        TestMethods.changeShopCurrencyFromAdmin(currency);
     });
 
     /** Pay and process order. */
     /** Capture */
-    TestMethods.payWithSelectedCurrency(Cypress.env('ENV_CURRENCY_TO_CHANGE_WITH'), 'capture');
+    TestMethods.payWithSelectedCurrency(currency, 'capture');
 
     /** Refund last created order (previously captured). */
     it('Process last order captured from admin panel to be refunded', () => {
@@ -51,6 +53,6 @@ describe('paylike plugin quick test', () => {
     });
 
     /** Void */
-    TestMethods.payWithSelectedCurrency(Cypress.env('ENV_CURRENCY_TO_CHANGE_WITH'), 'void');
+    TestMethods.payWithSelectedCurrency(currency, 'void');
 
 }); // describe
