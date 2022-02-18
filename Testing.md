@@ -34,7 +34,6 @@ As you can see the plugin is bundled with Cypress testing on this repository. Yo
     "REMOTE_LOG_URL": "", // if you want to send log information about framework/shop & paylike module versions
     "ENV_CURRENCY_TO_CHANGE_WITH": "USD",
     "ENV_CURRENCIES_TO_TEST": ["USD", "EUR"], // currencies used to make payments with in Full test
-    "ENV_CAPTURE_MODE": "Delayed", // Instant/Delayed (write with capital first letter )
     "ENV_CARD_NUMBER": 4100000000000000,
     "ENV_CARD_EXPIRY": 1226,
     "ENV_CARD_CVV": 654
