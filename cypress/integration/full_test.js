@@ -39,6 +39,10 @@ describe('paylike plugin full test', () => {
 
         /** Make Instant payments */
         for (var currency of currenciesToTest) {
+            /** Change shop currency from admin. */
+            it(`Change shop currency from admin to "${currency}"`, () => {
+                TestMethods.changeShopCurrencyFromAdmin(currency);
+            });
             TestMethods.payWithSelectedCurrency(currency, 'refund');
         }
     });
@@ -55,6 +59,10 @@ describe('paylike plugin full test', () => {
              * HARDCODED currency
              */
             if ('USD' == currency || 'RON' == currency) {
+                /** Change shop currency from admin. */
+                it(`Change shop currency from admin to "${currency}"`, () => {
+                    TestMethods.changeShopCurrencyFromAdmin(currency);
+                });
                 TestMethods.payWithSelectedCurrency(currency, 'capture');
                 /** In "delayed" mode we check "void" action too. */
                 TestMethods.payWithSelectedCurrency(currency, 'void');

@@ -124,11 +124,6 @@ export var TestMethods = {
      * @param {String} paylikeAction
      */
      payWithSelectedCurrency(currency, paylikeAction) {
-        /** Change shop currency from admin. */
-        it(`Change shop currency from admin to "${currency}"`, () => {
-            TestMethods.changeShopCurrencyFromAdmin(currency);
-        });
-
         /** Make an instant payment. */
         it(`makes a Paylike payment with "${currency}"`, () => {
             this.makePaymentFromFrontend(currency);
