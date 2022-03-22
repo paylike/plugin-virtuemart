@@ -1,0 +1,44 @@
+# to use orbs, must use version >= 2.1
+version: 2.1
+orbs:
+  # import Cypress orb by specifying an exact version x.y.z
+  # or the latest version 1.x.x using "@1" syntax
+  cypress: cypress-io/cypress@1
+workflows:
+  build:
+    jobs:
+      # "cypress" is the name of the imported orb
+      # "run" is the name of the job defined in Cypress orb
+      - cypress/run:
+          name: Run_QUICK_tests
+          context:
+            - paylike
+          spec: cypress/integration/quick_test.js
+          filters:
+            branches:
+              only:
+                - master
+      - cypress/run:
+          name: Run_FULL_tests
+          requires:
+            - Run_QUICK_tests
+          context:
+            - paylike
+          spec: cypress/integration/full_test.js
+          filters:
+            branches:
+              only:
+                - master
+      # the following must run after all test passed
+      # to show latest supported version in repository readme.md file
+      - cypress/run:
+          name: Run_LOG_VERSION_remotely
+          requires:
+            - Run_FULL_tests
+          context:
+            - paylike
+          spec: cypress/integration/log_version.js
+          filters:
+            branches:
+              only:
+                - master

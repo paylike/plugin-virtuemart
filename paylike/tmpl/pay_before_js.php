@@ -8,7 +8,7 @@ $vponepagecheckout = JPluginHelper::isEnabled('system', 'vponepagecheckout');
 <script>
 if (typeof vmPaylike === "undefined"){
 	var vmPaylike = {};
-	 jQuery.getScript("https://sdk.paylike.io/4.js", function(){});
+	 jQuery.getScript("https://sdk.paylike.io/10.js", function(){});
 }
 vmPaylike.method = {};
 vmPaylike.site = '<?php echo juri::root(true); ?>/index.php?option=com_virtuemart&view=plugin&type=vmpayment&name=paylike&format=json';
@@ -31,21 +31,29 @@ vmPaylike.paymentDone = false;
 					//set default method, if no select list of payments
 					if($selects.length ===0) {
 						id = vmPaylike.methodId;
-						console.log("default method :"+id);
 					} else if (vmPaylike.method.hasOwnProperty("ID"+methodId)) {
 						id = vmPaylike.method["ID"+methodId];
-						console.log("method from list:"+id);
 					}
 					if(id !== 0) {
 						data.virtuemart_paymentmethod_id = id;
-						// Get payment info for this method ID 
+						// Get payment info for this method ID
 						$.getJSON( vmPaylike.site, data, function( datas ) {
-							paylike = Paylike(datas.publicKey);
-							paylike.popup({
+
+							publicKey = {
+								key: datas.publicKey
+							};
+
+							paylike = Paylike(publicKey);
+
+							paylike.pay({
+								test: ('1' == datas.testMode) ? (true) : (false),
 								title: datas.title,
 								description: datas.description,
-								currency: datas.currency,
-								amount: datas.amount,
+								amount: {
+									currency: datas.currency,
+									exponent: datas.exponent,
+									value:	datas.amount
+								},
 								locale: datas.locale,
 								custom: {
 									//orderId: datas.orderId,
@@ -69,8 +77,6 @@ vmPaylike.paymentDone = false;
 											async: false,
 											data: payData,
 											success: function(data) {
-												// console.log('captureTransactionFull',txt);
-												console.log('paylike datas',e,r);
 												if(data.success =='1') {
 													validate = true;
 													form.data('vmPaylike-verified', true);
@@ -85,13 +91,12 @@ vmPaylike.paymentDone = false;
 											dataType :'json'
 										});
 									} else {
-										//console.log('no DATA returned');
 										cancelSubmit();
 									}
 								}
 							);
 						});
-						
+
 						return false;
 					} else form.data('vmPaylike-verified', true);
 
@@ -105,7 +110,6 @@ vmPaylike.paymentDone = false;
 	 bindCheckoutForm();
 	$(document).on('vpopc.event', function(event, type) {
 		var form = $('#checkoutForm');
-		console.log(type);
 			if(type == 'checkout.updated.shipmentpaymentcartlist'
 				|| type == 'checkout.updated.cartlist'
 				|| type == 'prepare.data.payment') form.data('vmPaylike-verified', false);
@@ -117,7 +121,7 @@ vmPaylike.paymentDone = false;
      $(document).ajaxStop(function() {
         bindCheckoutForm();
      });
-		
+
 	function cancelSubmit() {
 		var form = $('#checkoutForm');
 		validate = form.data('vmPaylike-verified', false);
@@ -142,34 +146,38 @@ jQuery(document).ready(function($) {
 			confirm = $(this).find('input[name="confirm"]').length,
 			$btn = jQuery('#checkoutForm').find('button[name="confirm"]'),
 			checkout = $btn.attr('task');
-			
-		console.log($btn);
+
 		// return false;
-		// console.log(confirm+' checkout '+checkout);
 		if(confirm === 0 || checkout ==='checkout') return;
 		//set default method, if no select list of payments
 		if($selects.length ===0) {
 			id = vmPaylike.methodId;
-			
-			console.log("default method :"+id);
 		} else if (vmPaylike.method.hasOwnProperty("ID"+methodId)) {
 			id = vmPaylike.method["ID"+methodId];
-			console.log("method from list:"+id);
 		}
 		if(id === 0) return;
-		console.log(id);
 		data.virtuemart_paymentmethod_id = id;
-		
-		// Get payment info for this method ID 
+
+		// Get payment info for this method ID
 		$.getJSON( vmPaylike.site, data, function( datas ) {
 			$btn.prop('disabled', false).addClass('vm-button-correct').removeClass('vm-button');
 			$(this).vm2front('stopVmLoading');
-			paylike = Paylike(datas.publicKey);
-			paylike.popup({
+
+			publicKey = {
+				key: datas.publicKey
+			};
+
+			paylike = Paylike(publicKey);
+
+			paylike.pay({
+				test: ('1' == datas.testMode) ? (true) : (false),
 				title: datas.title,
 				description: datas.description,
-				currency: datas.currency,
-				amount: datas.amount,
+				amount: {
+					currency: datas.currency,
+					exponent: datas.exponent,
+					value:	datas.amount
+				},
 				locale: datas.locale,
 				custom: {
 					//orderId: datas.orderId,
@@ -193,8 +201,6 @@ jQuery(document).ready(function($) {
 							async: false,
 							data: payData,
 							success: function(data) {
-								// console.log('captureTransactionFull',txt);
-								console.log('paylike datas',e,r);
 								if(data.success =='1') {
 									paymentDone = true;
 									$container.find('#checkoutForm').submit();
@@ -211,7 +217,6 @@ jQuery(document).ready(function($) {
 				}
 			);
 		});
-		console.log(id + " paylike");
 		e.preventDefault();
 		return false;
 	});
@@ -220,7 +225,6 @@ jQuery(document).ready(function($) {
 	// if(Virtuemart.container
 	// Virtuemart.bCheckoutButton = function(e) {
 		// e.preventDefault();
-		// console.log('submit now');
 	// }
 });
 

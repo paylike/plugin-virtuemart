@@ -3,17 +3,15 @@
 defined ('_JEXEC') or die('Restricted access');
 if ( ! class_exists(  'Paylike\\Client' ) ) {
 	include_once( __DIR__ .'/lib/Client.php' );
-} 
+}
 if ( ! class_exists( 'PaylikeCurrency' ) ) {
 	include_once( __DIR__ .'/lib/PaylikeCurrency.php' );
-} 
+}
 if ( ! class_exists( 'vmPSPlugin' ) ) {
 	require( JPATH_VM_PLUGINS . DS . 'vmpsplugin.php' );
-} 
+}
 /**
- * @version $Id: paylike.php,v 2.0.0.6 2020/06/18 14:29:00 ei
- *
- * paylike paiment plugin:
+ * paylike payment plugin:
  * @author Kohl Patrick
  * @package VirtueMart
  * @subpackage payment
@@ -29,8 +27,8 @@ if ( ! class_exists( 'vmPSPlugin' ) ) {
  */
 
 class plgVmPaymentPaylike extends vmPSPlugin {
-	
-	public $version = '2.0.0.0';
+
+	public $version = '2.1.0.0';
 	static $IDS = array();
 	protected $_isInList = false;
 	function __construct (& $subject, $config) {
@@ -79,7 +77,7 @@ class plgVmPaymentPaylike extends vmPSPlugin {
 			'cost_percent_total'          => 'decimal(10,2)',
 			'tax_id'                      => 'smallint(1)',
 			'paylike_data'                => 'varchar(65000)'
-			
+
 		);
 
 		return $SQLfields;
@@ -126,7 +124,7 @@ class plgVmPaymentPaylike extends vmPSPlugin {
 				$response = \Paylike\Transaction::fetch( $transactionId);
 				$transactionAmount = (int)$response['transaction']['amount'];
 				$transactionCurrency = $response['transaction']['currency'];
-				
+
 				$paylikeCurrency = new PaylikeCurrency();
 				$price = floatval( str_replace( ",", "", $order['details']['BT']->order_total ) );
 				$this->getPaymentCurrency( $method );
@@ -136,7 +134,7 @@ class plgVmPaymentPaylike extends vmPSPlugin {
 					$hasError = false;
 				}
 			}
-			// return to cart and dont save transation values, if we dont get the right values;
+			// return to cart and don't save transaction values, if we don't get the right values;
 			if($hasError) {
 				$msg = 'Paylike Transaction not found '.$transactionId;
 				$app = JFactory::getApplication();
@@ -167,7 +165,7 @@ class plgVmPaymentPaylike extends vmPSPlugin {
 				$orderlink .= '&order_pass=' . $order['details']['BT']->order_pass;
 			}
 		}
-		//afterpaiment need specific render and scripts
+		//after-payment need specific render and scripts
 		if($method->checkout_mode === 'after') {
 			$html = $this->renderByLayout('pay_after', array(
 				'method'=>$method,
@@ -178,7 +176,7 @@ class plgVmPaymentPaylike extends vmPSPlugin {
 				'orderlink' =>$orderlink
 			));
 		} else {
-			
+
 			$html = $this->renderByLayout('order_done', array(
 				'method'=>$method,
 				'cart'=>$cart,
@@ -187,7 +185,7 @@ class plgVmPaymentPaylike extends vmPSPlugin {
 				'displayTotalInPaymentCurrency' => $totalInPaymentCurrency['display'],
 				'orderlink' =>$orderlink
 			));
-			//before paiment display
+			//before payment display
 			//We delete the cart content
 			$cart->emptyCart ();
 			// and send Status email if needed
@@ -300,7 +298,7 @@ class plgVmPaymentPaylike extends vmPSPlugin {
 	public function plgVmDisplayListFEPayment (VirtueMartCart $cart, $selected = 0, &$htmlIn) {
 		$this->_isInList = true;
 		return $this->displayListFE ($cart, $selected, $htmlIn);
-		
+
 	}
 
 	/*
@@ -439,8 +437,8 @@ class plgVmPaymentPaylike extends vmPSPlugin {
 
 
 	protected function renderPluginName( $plugin ) {
-		
-		
+
+
 		$return ='
 		<style>.paylike-wrapper .payment_logo img {
 				height: 30px;
@@ -489,6 +487,7 @@ class plgVmPaymentPaylike extends vmPSPlugin {
 	function getVirtuemartVersions() {
 		return vmVersion::$REVISION;
 	}
+
 	function setKey($method){
 		if ( $method->test_mode == 1 ) {
 			$privateKey = $method->test_api_key;
@@ -501,7 +500,10 @@ class plgVmPaymentPaylike extends vmPSPlugin {
 		$this->publicKey = $publicKey;
 		return $publicKey;
 	}
-	/* Used for many different purposes (Payment Capture, Refund, Half Refund and Void) */
+
+	/**
+	 *  Used for many different purposes (Payment Capture, Refund, Half Refund and Void)
+	 */
 	function plgVmOnSelfCallFE( $type, $name, &$render ) {
 		$id = vRequest::getInt('virtuemart_paymentmethod_id',0);
 		if ( ! ( $method = $this->getVmPluginMethod( $id ) ) ) {
@@ -519,8 +521,9 @@ class plgVmPaymentPaylike extends vmPSPlugin {
 		$json->error = '';
 		$json->success = '0';
 		$this->setKey( $method ); // set private key for further paylike functions
+
 		if($method->checkout_mode === 'after') {
-			//$response have all send datas, so we can compare
+			//$response have all sent datas, so we can compare
 			$response = \Paylike\Transaction::fetch( $transactionId);
 			if(isset($response['transaction']['custom'])) {
 				$transactionAmount = (int)$response['transaction']['amount'];
@@ -552,7 +555,7 @@ class plgVmPaymentPaylike extends vmPSPlugin {
 						$order['customer_notified'] = 1;
 						$order['comments'] = '';
 						$this->updateTransactionId($transactionId,$json->cart_order_id);
-						
+
 						// echo json_encode($order);
 						// jexit();
 						$modelOrder->updateStatusForOneOrder ($details->virtuemart_order_id, $order, TRUE);
@@ -563,7 +566,7 @@ class plgVmPaymentPaylike extends vmPSPlugin {
 					}
 				} else {
 					$json->error = 'No order id found';
-					
+
 					$json->order = $modelOrder->getOrder((int)$response['transaction']['custom']['orderId']);
 				}
 			} else {
@@ -573,7 +576,7 @@ class plgVmPaymentPaylike extends vmPSPlugin {
 			$task = vRequest::get('paylikeTask');
 			$session = JFactory::getSession();
 			if($task === 'cartData') {
-				
+
 				$paylikeID = uniqid('paylike_');
 				$session->set( 'paylike.uniqid', $paylikeID);
 				$cart = VirtueMartCart::getCart(false);
@@ -588,9 +591,11 @@ class plgVmPaymentPaylike extends vmPSPlugin {
 				$languages = JLanguageHelper::getLanguages( 'lang_code' );
 				$locale = $languages[ $lang->getTag() ]->sef;
 				$json->publicKey = $this->publicKey;
+				$json->testMode = $method->test_mode;
 				$json->locale = $locale;
 				$json->currency = $currency;
 				$json->amount = round($priceInCents);
+				$json->exponent = $paylikeCurrency->getPaylikeCurrency($currency)['exponent'];
 				$json->customer = new stdClass();
 				$json->customer->name = $billingDetail['first_name'] . " " . $billingDetail['last_name'];
 				$json->customer->email = $billingDetail['email'];
@@ -604,10 +609,10 @@ class plgVmPaymentPaylike extends vmPSPlugin {
 					'name' => 'VirtueMart',
 					'version' => $this->getVirtuemartVersions()
 					);
-				$json->paylikeID = $paylikeID; // this is session ID to secure the transaction, i'ts fetch after to validate
+				$json->paylikeID = $paylikeID; // this is session ID to secure the transaction, it's fetch after to validate
 
 			} else if ($task === 'saveInSession') {
-				
+
 				$response = \Paylike\Transaction::fetch( $transactionId);
 				$sessionPaylikeID = $session->get( 'paylike.uniqid','');
 				$paylikeID = $response['transaction']['custom']['paylikeID'];
@@ -633,7 +638,7 @@ class plgVmPaymentPaylike extends vmPSPlugin {
 			$db	= JFactory::getDBO();
 			$db->updateObject($this->_tablename, $data, 'virtuemart_order_id');
 	}
-	//update âylike on update statut
+	//update paylike on update status
 	function plgVmOnUpdateOrderPayment( $order, $old_order_status ) {
 
 		if (!($method = $this->getVmPluginMethod ($order->virtuemart_paymentmethod_id))) {
@@ -644,11 +649,11 @@ class plgVmPaymentPaylike extends vmPSPlugin {
 			return NULL;
 		}
 		//todo half refund $order->order_status != $method->status_half_refund
-		if ($order->order_status != $method->status_capture 
+		if ($order->order_status != $method->status_capture
 			&& $order->order_status != $method->status_success
 			&& $order->order_status != $method->status_refunded
 
-			
+
 			) {
 			// vminfo('Order_status not found '.$order->order_status.' in '.$method->status_capture.', '.$method->status_success.', '.$method->status_refunded );
 			return null;
@@ -686,9 +691,9 @@ class plgVmPaymentPaylike extends vmPSPlugin {
 					'amount'     => $amount,
 					'descriptor' => ""
 				);
-				
+
 				$response = \Paylike\Transaction::capture( $transactionid, $data );
-				
+
 				vmdebug('Paylike Transaction::capture',$response);
 			} else {
 				/* void payment if not already captured */
@@ -700,4 +705,3 @@ class plgVmPaymentPaylike extends vmPSPlugin {
 		}
 	}
 }
-

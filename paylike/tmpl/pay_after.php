@@ -2,9 +2,7 @@
 defined ('_JEXEC') or die();
 
 /**
- * @version $Id: paylike.php,v 2.0.0.6 2020/06/18 14:29:00 ei
- *
- * paylike paiment plugin:
+ * paylike payment plugin:
  * @author Kohl Patrick
  * @package VirtueMart
  * @subpackage payment
@@ -31,7 +29,15 @@ $languages = JLanguageHelper::getLanguages( 'lang_code' );
 $languageCode = $languages[ $lang->getTag() ]->sef;
 
 $data = new stdClass;
+
+$session = JFactory::getSession();
+$paylikeID = uniqid('paylike_');
+$session->set( 'paylike.uniqid', $paylikeID);
+$data->paylikeID = $paylikeID; // this is session ID to secure the transaction, it's fetch after to validate
+
 $data->publicKey = $this->setKey($method);
+$data->testMode = $method->test_mode;
+
 $data->title = jText::_($method->title);
 $data->description = jText::_($method->description);
 $data->orderId = $billingDetail->virtuemart_order_id;
@@ -47,6 +53,8 @@ foreach ( $cart->products as $product ) {
 }
 $data->amount = round($priceInCents);
 $data->currency = $currency;
+$data->exponent = $paylikeCurrency->getPaylikeCurrency($currency)['exponent'];
+
 $data->locale = $languageCode;
 $data->customer = new stdClass();
 $data->customer->name = $billingDetail->first_name . " " . $billingDetail->last_name ;
@@ -67,7 +75,7 @@ $data->ajaxUrl = juri::root(true).'/index.php?option=com_virtuemart&view=plugin&
 <style>
 	.paylike-info-hide{display:none;}
 </style>
-<script src="https://sdk.paylike.io/4.js"></script>
+<script src="https://sdk.paylike.io/10.js"></script>
 
 
 <div id="paylike-temp-info">
@@ -99,18 +107,29 @@ if($viewData["orderlink"]){
 <script>
 jQuery(document).ready(function($) {
 	var datas = <?php echo json_encode($data) ?>;
-		paylike = Paylike(datas.publicKey);
+
+	var publicKey = {
+		key: datas.publicKey
+	};
+
+	paylike = Paylike({key: datas.publicKey});
+
 	$('#paylike-pay').on('click',function(){
 		pay();
 	});
 	function pay(){
-		paylike.popup({
+		paylike.pay({
+			test: ('1' == datas.testMode) ? (true) : (false),
 			title: datas.title,
 			description: datas.description,
-			currency: datas.currency,
-			amount: datas.amount,
+			amount: {
+				currency: datas.currency,
+				exponent: datas.exponent,
+				value:	datas.amount
+			},
 			locale: datas.locale,
 			custom: {
+				paylikeID: datas.paylikeID,
 				orderId: datas.orderId,
 				orderNo: datas.orderNo,
 				products: datas.products,
@@ -133,10 +152,8 @@ jQuery(document).ready(function($) {
 						async: false,
 						data: payData,
 						success: function(data) {
-							// console.log('captureTransactionFull',txt);
-							// console.log('captureTransactionFull',e,r);
 							if(data.success =='1') {
-								$('#paylike-after-info').toggleClass('.paylike-info-hide');
+								$('#paylike-after-info').toggleClass('paylike-info-hide');
 								$('#paylike-temp-info').remove();
 							} else {
 								alert(data.error);
