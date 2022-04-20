@@ -2,13 +2,12 @@
 <extension version="2.5" type="plugin" group="vmpayment" method="upgrade">
     <name>VM - Payment, Paylike Version 2</name>
     <creationDate>April 2020</creationDate>
-    <creationDate>25 May 2020</creationDate>
     <author>Patrick Kohl</author>
     <authorUrl>http://shop.st42.fr</authorUrl>
     <copyright>Copyright (C) 2018 STUDIO42 France. All rights reserved.</copyright>
     <license>http://www.gnu.org/licenses/gpl-2.0.html GNU/GPL</license>
-    <version>2.1.0.0</version>
-    <description><![CDATA[<a href="http://paylike.com" target="_blank">Paylke</a> is a popular
+    <version>2.1.1</version>
+    <description><![CDATA[<a href="https://paylike.io" target="_blank">Paylke</a> is a popular
   payment provider. ]]>
     </description>
     <!-- Include plugin files and folders -->

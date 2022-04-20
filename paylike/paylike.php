@@ -28,7 +28,7 @@ if ( ! class_exists( 'vmPSPlugin' ) ) {
 
 class plgVmPaymentPaylike extends vmPSPlugin {
 
-	public $version = '2.1.0.0';
+	public $version = '2.1.1';
 	static $IDS = array();
 	protected $_isInList = false;
 	function __construct (& $subject, $config) {
