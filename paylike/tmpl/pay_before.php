@@ -17,10 +17,11 @@ defined ('_JEXEC') or die();
  *
  * http://virtuemart.net
  */
- 
+
 $method = $viewData["method"];
 include_once(JPATH_PLUGINS.'/'.$this->_type . '/' . $this->_name.'/tmpl/pay_before_js.php');
  ?>
 <script>
 	vmPaylike.method["ID<?php echo $method->virtuemart_paymentmethod_id ?>"] = <?php echo $method->virtuemart_paymentmethod_id; ?>;
+	vmPaylike.popup_title = <?php echo json_encode($method->popup_title) ?>;
 </script>

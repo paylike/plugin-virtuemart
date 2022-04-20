@@ -47,7 +47,7 @@ vmPaylike.paymentDone = false;
 
 							paylike.pay({
 								test: ('1' == datas.testMode) ? (true) : (false),
-								title: datas.title,
+								title: vmPaylike.popup_title,
 								description: datas.description,
 								amount: {
 									currency: datas.currency,
@@ -171,7 +171,7 @@ jQuery(document).ready(function($) {
 
 			paylike.pay({
 				test: ('1' == datas.testMode) ? (true) : (false),
-				title: datas.title,
+				title: vmPaylike.popup_title,
 				description: datas.description,
 				amount: {
 					currency: datas.currency,
