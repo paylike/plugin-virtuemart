@@ -38,7 +38,7 @@ $data->paylikeID = $paylikeID; // this is session ID to secure the transaction, 
 $data->publicKey = $this->setKey($method);
 $data->testMode = $method->test_mode;
 
-$data->title = jText::_($method->title);
+$data->popup_title = jText::_($method->popup_title);
 $data->description = jText::_($method->description);
 $data->orderId = $billingDetail->virtuemart_order_id;
 $data->virtuemart_paymentmethod_id = $billingDetail->virtuemart_paymentmethod_id;
@@ -120,7 +120,7 @@ jQuery(document).ready(function($) {
 	function pay(){
 		paylike.pay({
 			test: ('1' == datas.testMode) ? (true) : (false),
-			title: datas.title,
+			title: datas.popup_title,
 			description: datas.description,
 			amount: {
 				currency: datas.currency,
