@@ -28,7 +28,7 @@ if ( ! class_exists( 'vmPSPlugin' ) ) {
 
 class plgVmPaymentPaylike extends vmPSPlugin {
 
-	public $version = '2.1.1';
+	public $version = '2.1.2';
 	static $IDS = array();
 	protected $_isInList = false;
 	function __construct (& $subject, $config) {
@@ -485,7 +485,7 @@ class plgVmPaymentPaylike extends vmPSPlugin {
 
 	/* get current Virtuemart version */
 	function getVirtuemartVersions() {
-		return vmVersion::$REVISION;
+		return vmVersion::$RELEASE;
 	}
 
 	function setKey($method){
@@ -608,6 +608,10 @@ class plgVmPaymentPaylike extends vmPSPlugin {
 				$json->ecommerce = array(
 					'name' => 'VirtueMart',
 					'version' => $this->getVirtuemartVersions()
+					);
+				$json->version = array(
+					'name' => 'Paylike',
+					'version' => $this->version,
 					);
 				$json->paylikeID = $paylikeID; // this is session ID to secure the transaction, it's fetch after to validate
 

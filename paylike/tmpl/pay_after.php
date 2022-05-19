@@ -63,13 +63,17 @@ $data->customer->phoneNo = $billingDetail->phone_1 ;
 $data->customer->IP = $_SERVER["REMOTE_ADDR"];
 $data->platform = array(
 	'name' => 'Joomla',
-	'version' => $this->getJoomlaVersions()
+	'version' => $this->getJoomlaVersions(),
 	);
 $data->ecommerce = array(
 	'name' => 'VirtueMart',
-	'version' => $this->getVirtuemartVersions()
+	'version' => $this->getVirtuemartVersions(),
 	);
-$data->version = $this->version;
+$data->version = array(
+	'name' => 'Paylike',
+	'version' => $this->version,
+	);
+
 $data->ajaxUrl = juri::root(true).'/index.php?option=com_virtuemart&view=plugin&vmtype=vmpayment&name=paylike';
 ?>
 <style>
