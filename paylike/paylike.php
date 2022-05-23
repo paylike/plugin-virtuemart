@@ -28,7 +28,7 @@ if ( ! class_exists( 'vmPSPlugin' ) ) {
 
 class plgVmPaymentPaylike extends vmPSPlugin {
 
-	public $version = '2.1.2';
+	public $version = '2.1.3';
 	static $IDS = array();
 	protected $_isInList = false;
 	function __construct (& $subject, $config) {
@@ -100,7 +100,7 @@ class plgVmPaymentPaylike extends vmPSPlugin {
 		vmLanguage::loadJLang('com_virtuemart',true);
 		vmLanguage::loadJLang('com_virtuemart_orders', TRUE);
 
-		$this->getPaymentCurrency($method, $order['details']['BT']->payment_currency_id);
+		$this->getPaymentCurrency($method);
 		$currency_code_3 = shopFunctions::getCurrencyByID($method->payment_currency, 'currency_code_3');
 		$email_currency = $this->getEmailCurrency($method);
 
@@ -534,9 +534,6 @@ class plgVmPaymentPaylike extends vmPSPlugin {
 				if(!empty($cart->virtuemart_order_id)) {
 					$order = $modelOrder->getOrder($cart->virtuemart_order_id);
 					$details = $order['details']['BT'];
-						// echo json_encode($order);
-						// jexit();
-					// print("<pre>".print_r($order,true)."</pre>");
 					$currency = shopFunctions::getCurrencyByID( $details->payment_currency_id, 'currency_code_3');
 					$paylikeCurrency = new PaylikeCurrency();
 					$price = floatval( str_replace( ",", "", $details->order_total ) );
