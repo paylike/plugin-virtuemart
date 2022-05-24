@@ -20,7 +20,7 @@ $method = $viewData["method"];
 $cart = $viewData["cart"];
 $billingDetail = $viewData["billingDetails"];
 $paylikeCurrency = new PaylikeCurrency();
-$price = floatval( str_replace( ",", "", $cart->cartPrices['billTotal'] ) );
+$price = vmPSPlugin::getAmountValueInCurrency($cart->cartPrices['billTotal'], $method->payment_currency);
 $this->getPaymentCurrency( $method );
 $currency = shopFunctions::getCurrencyByID($method->payment_currency, 'currency_code_3');
 $priceInCents = ceil( round( $price, 3 ) * $paylikeCurrency->getPaylikeCurrencyMultiplier( $currency ) );
