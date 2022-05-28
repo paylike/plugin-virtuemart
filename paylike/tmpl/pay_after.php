@@ -20,9 +20,9 @@ $method = $viewData["method"];
 $cart = $viewData["cart"];
 $billingDetail = $viewData["billingDetails"];
 $paylikeCurrency = new PaylikeCurrency();
-$price = vmPSPlugin::getAmountValueInCurrency($cart->cartPrices['billTotal'], $method->payment_currency);
 $this->getPaymentCurrency( $method );
 
+$price = vmPSPlugin::getAmountValueInCurrency($cart->cartPrices['billTotal'], $method->payment_currency);
 $currency = shopFunctions::getCurrencyByID($method->payment_currency, 'currency_code_3');
 $precision = $paylikeCurrency->getPaylikeCurrency($currency)['exponent'] ?? 2;
 $priceInCents = (int) ceil( round($price * $paylikeCurrency->getPaylikeCurrencyMultiplier($currency), $precision));
