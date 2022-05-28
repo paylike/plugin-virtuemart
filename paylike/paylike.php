@@ -29,7 +29,7 @@ if ( ! class_exists( 'vmPSPlugin' ) ) {
 
 class plgVmPaymentPaylike extends vmPSPlugin {
 
-	public $version = '2.1.3';
+	public $version = '2.1.4';
 	static $IDS = array();
 	protected $_isInList = false;
 	function __construct (& $subject, $config) {
@@ -106,8 +106,14 @@ class plgVmPaymentPaylike extends vmPSPlugin {
 		$emailCurrencyId = $this->getEmailCurrency($method);
 		$emailCurrency = shopFunctions::getCurrencyByID($emailCurrencyId, 'currency_code_3');
 
-		$totalInPaymentCurrency = (float) vmPSPlugin::getAmountValueInCurrency($order['details']['BT']->order_total, $method->payment_currency);
+		$paylikeCurrency = new PaylikeCurrency();
+
+
+		$orderTotal = $order['details']['BT']->order_total;
+		$price = vmPSPlugin::getAmountValueInCurrency($orderTotal, $method->payment_currency);
 		$currency = shopFunctions::getCurrencyByID($method->payment_currency, 'currency_code_3');
+		$precision = $paylikeCurrency->getPaylikeCurrency($currency)['exponent'] ?? 2;
+		$priceInCents = (int) ceil( round($price * $paylikeCurrency->getPaylikeCurrencyMultiplier($currency), $precision));
 
 		if (!empty($method->payment_info)) {
 			$lang = JFactory::getLanguage ();
@@ -115,7 +121,9 @@ class plgVmPaymentPaylike extends vmPSPlugin {
 				$method->payment_info = vmText::_ ($method->payment_info);
 			}
 		}
+
 		$transactionId ='';
+
 		//verify the session
 		if($method->checkout_mode === 'before') {
 			$session = JFactory::getSession();
@@ -128,12 +136,6 @@ class plgVmPaymentPaylike extends vmPSPlugin {
 				$transactionAmount = (int)$response['transaction']['amount'];
 				$transactionCurrency = $response['transaction']['currency'];
 
-				$paylikeCurrency = new PaylikeCurrency();
-
-				// $price = floatval( str_replace( ",", "", $order['details']['BT']->order_total ) );
-				// $this->getPaymentCurrency( $method );
-
-				$priceInCents = ceil( round( $totalInPaymentCurrency, 3 ) * $paylikeCurrency->getPaylikeCurrencyMultiplier( $currency ) );
 				if($transactionAmount == $priceInCents && $transactionCurrency == $currency) {
 					$hasError = false;
 				}
@@ -154,15 +156,14 @@ class plgVmPaymentPaylike extends vmPSPlugin {
 		$dbValues['cost_percent_total'] = $method->cost_percent_total;
 		$dbValues['payment_currency'] = $currency;
 		$dbValues['email_currency'] = $emailCurrency;
-		$dbValues['payment_order_total'] = $totalInPaymentCurrency;
+		$dbValues['payment_order_total'] = $price;
 		$dbValues['tax_id'] = $method->tax_id;
 		$dbValues['paylike_data'] = $transactionId;//before transaction has the ID
 		$this->storePSPluginInternalData ($dbValues);
 
-		// $currency = CurrencyDisplay::getInstance ('', $order['details']['BT']->virtuemart_vendor_id);
-
 		$orderlink='';
 		$tracking = VmConfig::get('ordertracking','guests');
+
 		if($tracking !='none' and !($tracking =='registered' and empty($order['details']['BT']->virtuemart_user_id) )) {
 
 			$orderlink = 'index.php?option=com_virtuemart&view=orders&layout=details&order_number=' . $order['details']['BT']->order_number;
@@ -170,6 +171,7 @@ class plgVmPaymentPaylike extends vmPSPlugin {
 				$orderlink .= '&order_pass=' . $order['details']['BT']->order_pass;
 			}
 		}
+
 		//after-payment need specific render and scripts
 		if($method->checkout_mode === 'after') {
 			$html = $this->renderByLayout('pay_after', array(
@@ -177,7 +179,7 @@ class plgVmPaymentPaylike extends vmPSPlugin {
 				'cart'=>$cart,
 				'billingDetails' =>$order['details']['BT'],
 				'payment_name' => $dbValues['payment_name'],
-				'displayTotalInPaymentCurrency' => $totalInPaymentCurrency['display'],
+				'displayTotalInPaymentCurrency' => $price,
 				'orderlink' =>$orderlink
 			));
 		} else {
@@ -187,7 +189,7 @@ class plgVmPaymentPaylike extends vmPSPlugin {
 				'cart'=>$cart,
 				'billingDetails' =>$order['details']['BT'],
 				'payment_name' => $dbValues['payment_name'],
-				'displayTotalInPaymentCurrency' => $totalInPaymentCurrency['display'],
+				'displayTotalInPaymentCurrency' => $price,
 				'orderlink' =>$orderlink
 			));
 			//before payment display
@@ -548,15 +550,16 @@ class plgVmPaymentPaylike extends vmPSPlugin {
 					$order = $modelOrder->getOrder($cart->virtuemart_order_id);
 					$details = $order['details']['BT'];
 
-					$currency = shopFunctions::getCurrencyByID( $method->payment_currency, 'currency_code_3');
 					$paylikeCurrency = new PaylikeCurrency();
 
-					$price = vmPSPlugin::getAmountValueInCurrency($details->order_total, $method->payment_currency);
+					$orderTotal = $details->order_total;
+					$price = vmPSPlugin::getAmountValueInCurrency($orderTotal, $method->payment_currency);
+					$currency = shopFunctions::getCurrencyByID($method->payment_currency, 'currency_code_3');
+					$precision = $paylikeCurrency->getPaylikeCurrency($currency)['exponent'] ?? 2;
+					$priceInCents = (int) ceil( round($price * $paylikeCurrency->getPaylikeCurrencyMultiplier($currency), $precision));
 
-					$priceInCents = ceil( round( $price, 3 ) * $paylikeCurrency->getPaylikeCurrencyMultiplier( $currency ) );
-					$amount = (int)round($priceInCents);
-					if($transactionAmount !== $amount || $transactionCurrency !== $currency ) {
-						$json->error = 'Error in Order amount ' . $amount .' '. $currency;
+					if($transactionAmount !== $priceInCents || $transactionCurrency !== $currency ) {
+						$json->error = 'Error in Order amount ' . $priceInCents .' '. $currency;
 					} else if((int)$cart->virtuemart_order_id !== (int)$response['transaction']['custom']['orderId']) {
 						$json->error = 'Error transaction not for this order' . $cart->virtuemart_order_id;
 					} else {
@@ -595,11 +598,12 @@ class plgVmPaymentPaylike extends vmPSPlugin {
 				$paylikeCurrency = new PaylikeCurrency();
 				$this->getPaymentCurrency( $method );
 
-				$price = vmPSPlugin::getAmountValueInCurrency($cart->cartPrices['billTotal'], $method->payment_currency);
-
+				$orderTotal = $cart->cartPrices['billTotal'];
+				$price = vmPSPlugin::getAmountValueInCurrency($orderTotal, $method->payment_currency);
 				$currency = shopFunctions::getCurrencyByID($method->payment_currency, 'currency_code_3');
+				$precision = $paylikeCurrency->getPaylikeCurrency($currency)['exponent'] ?? 2;
+				$priceInCents = (int) ceil( round($price * $paylikeCurrency->getPaylikeCurrencyMultiplier($currency), $precision));
 
-				$priceInCents = ceil( round( $price, 3 ) * $paylikeCurrency->getPaylikeCurrencyMultiplier( $currency ) );
 				$lang = JFactory::getLanguage();
 				$languages = JLanguageHelper::getLanguages( 'lang_code' );
 				$locale = $languages[ $lang->getTag() ]->sef;
@@ -607,7 +611,7 @@ class plgVmPaymentPaylike extends vmPSPlugin {
 				$json->testMode = $method->test_mode;
 				$json->locale = $locale;
 				$json->currency = $currency;
-				$json->amount = round($priceInCents);
+				$json->amount = $priceInCents;
 				$json->exponent = $paylikeCurrency->getPaylikeCurrency($currency)['exponent'];
 				$json->customer = new stdClass();
 				$json->customer->name = $billingDetail['first_name'] . " " . $billingDetail['last_name'];

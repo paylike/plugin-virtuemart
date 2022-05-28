@@ -22,8 +22,11 @@ $billingDetail = $viewData["billingDetails"];
 $paylikeCurrency = new PaylikeCurrency();
 $price = vmPSPlugin::getAmountValueInCurrency($cart->cartPrices['billTotal'], $method->payment_currency);
 $this->getPaymentCurrency( $method );
+
 $currency = shopFunctions::getCurrencyByID($method->payment_currency, 'currency_code_3');
-$priceInCents = ceil( round( $price, 3 ) * $paylikeCurrency->getPaylikeCurrencyMultiplier( $currency ) );
+$precision = $paylikeCurrency->getPaylikeCurrency($currency)['exponent'] ?? 2;
+$priceInCents = (int) ceil( round($price * $paylikeCurrency->getPaylikeCurrencyMultiplier($currency), $precision));
+
 $lang = JFactory::getLanguage();
 $languages = JLanguageHelper::getLanguages( 'lang_code' );
 $languageCode = $languages[ $lang->getTag() ]->sef;
@@ -51,7 +54,8 @@ foreach ( $cart->products as $product ) {
 		"Qty" => $product->quantity,
 	);
 }
-$data->amount = round($priceInCents);
+
+$data->amount = $priceInCents;
 $data->currency = $currency;
 $data->exponent = $paylikeCurrency->getPaylikeCurrency($currency)['exponent'];
 
