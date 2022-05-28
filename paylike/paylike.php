@@ -203,6 +203,19 @@ class plgVmPaymentPaylike extends vmPSPlugin {
 			$order['order_status'] = $this->getNewStatus ($method);
 			$order['customer_notified'] = 1;
 			$order['comments'] = '';
+
+			/**
+			 * There is no VM config setting for os_trigger_paid
+			 * In the future, we must set the status for capture on vmConfig
+			 * Add the additional info here
+			 */
+			if ($method->capture_mode === 'instant') {
+				$date = JFactory::getDate();
+				$today = $date->toSQL();
+				$order['paid_on'] = $today;
+				$order['paid'] = $price;
+			}
+
 			$modelOrder = VmModel::getModel ('orders');
 			$modelOrder->updateStatusForOneOrder ($details->virtuemart_order_id, $order, TRUE);
 		}
@@ -574,6 +587,19 @@ class plgVmPaymentPaylike extends vmPSPlugin {
 						$order['customer_notified'] = 1;
 						$order['comments'] = '';
 						$this->updateTransactionId($transactionId,$json->cart_order_id);
+
+						/**
+						 * There is no VM config setting for os_trigger_paid
+						 * In the future, we must set the status for capture on vmConfig
+						 * Add the additional info here
+						 */
+						if ($method->capture_mode === 'instant') {
+							$date = JFactory::getDate();
+							$today = $date->toSQL();
+							$order['paid_on'] = $today;
+							$order['paid'] = $price;
+						}
+
 						$modelOrder->updateStatusForOneOrder ($details->virtuemart_order_id, $order, TRUE);
 						$json->order_id  = $details->virtuemart_order_id;
 						$json->oldStatut  = $oldStatut;
