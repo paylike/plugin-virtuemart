@@ -29,7 +29,7 @@ if ( ! class_exists( 'vmPSPlugin' ) ) {
 
 class plgVmPaymentPaylike extends vmPSPlugin {
 
-	public $version = '2.1.4';
+	public $version = '2.1.5';
 	static $IDS = array();
 	protected $_isInList = false;
 	function __construct (& $subject, $config) {
@@ -172,6 +172,9 @@ class plgVmPaymentPaylike extends vmPSPlugin {
 			}
 		}
 
+		$currencyInstance = CurrencyDisplay::getInstance($method->payment_currency, $order['details']['BT']->virtuemart_vendor_id);
+		$priceDisplayWithCurrency = $price . ' ' . $currencyInstance->getSymbol();
+
 		//after-payment need specific render and scripts
 		if($method->checkout_mode === 'after') {
 			$html = $this->renderByLayout('pay_after', array(
@@ -179,7 +182,7 @@ class plgVmPaymentPaylike extends vmPSPlugin {
 				'cart'=>$cart,
 				'billingDetails' =>$order['details']['BT'],
 				'payment_name' => $dbValues['payment_name'],
-				'displayTotalInPaymentCurrency' => $price,
+				'displayTotalInPaymentCurrency' => $priceDisplayWithCurrency,
 				'orderlink' =>$orderlink
 			));
 		} else {
@@ -189,7 +192,7 @@ class plgVmPaymentPaylike extends vmPSPlugin {
 				'cart'=>$cart,
 				'billingDetails' =>$order['details']['BT'],
 				'payment_name' => $dbValues['payment_name'],
-				'displayTotalInPaymentCurrency' => $price,
+				'displayTotalInPaymentCurrency' => $priceDisplayWithCurrency,
 				'orderlink' =>$orderlink
 			));
 			//before payment display
