@@ -29,7 +29,7 @@ if ( ! class_exists( 'vmPSPlugin' ) ) {
 
 class plgVmPaymentPaylike extends vmPSPlugin {
 
-	public $version = '2.1.5';
+	public $version = '2.1.6';
 	static $IDS = array();
 	protected $_isInList = false;
 	function __construct (& $subject, $config) {
@@ -213,7 +213,7 @@ class plgVmPaymentPaylike extends vmPSPlugin {
 				$date = JFactory::getDate();
 				$today = $date->toSQL();
 				$order['paid_on'] = $today;
-				$order['paid'] = $price;
+				$order['paid'] = $orderTotal;
 			}
 
 			$modelOrder = VmModel::getModel ('orders');
@@ -597,7 +597,7 @@ class plgVmPaymentPaylike extends vmPSPlugin {
 							$date = JFactory::getDate();
 							$today = $date->toSQL();
 							$order['paid_on'] = $today;
-							$order['paid'] = $price;
+							$order['paid'] = $orderTotal;
 						}
 
 						$modelOrder->updateStatusForOneOrder ($details->virtuemart_order_id, $order, TRUE);
