@@ -8,7 +8,7 @@ export var PaylikeCurrencies = {
      */
     get_paylike_currency_multiplier(currency_iso_code) {
         var currency = this.get_paylike_currency(currency_iso_code);
-        if (currency['exponent']) {
+        if (currency.hasOwnProperty('exponent')) {
             return Math.pow(10, currency['exponent']);
         } else {
             return Math.pow(10, 2);

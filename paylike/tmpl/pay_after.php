@@ -20,10 +20,13 @@ $method = $viewData["method"];
 $cart = $viewData["cart"];
 $billingDetail = $viewData["billingDetails"];
 $paylikeCurrency = new PaylikeCurrency();
-$price = floatval( str_replace( ",", "", $cart->cartPrices['billTotal'] ) );
 $this->getPaymentCurrency( $method );
+
+$price = vmPSPlugin::getAmountValueInCurrency($cart->cartPrices['billTotal'], $method->payment_currency);
 $currency = shopFunctions::getCurrencyByID($method->payment_currency, 'currency_code_3');
-$priceInCents = ceil( round( $price, 3 ) * $paylikeCurrency->getPaylikeCurrencyMultiplier( $currency ) );
+$precision = $paylikeCurrency->getPaylikeCurrency($currency)['exponent'] ?? 2;
+$priceInCents = (int) ceil( round($price * $paylikeCurrency->getPaylikeCurrencyMultiplier($currency), $precision));
+
 $lang = JFactory::getLanguage();
 $languages = JLanguageHelper::getLanguages( 'lang_code' );
 $languageCode = $languages[ $lang->getTag() ]->sef;
@@ -38,7 +41,7 @@ $data->paylikeID = $paylikeID; // this is session ID to secure the transaction, 
 $data->publicKey = $this->setKey($method);
 $data->testMode = $method->test_mode;
 
-$data->title = jText::_($method->title);
+$data->popup_title = jText::_($method->popup_title);
 $data->description = jText::_($method->description);
 $data->orderId = $billingDetail->virtuemart_order_id;
 $data->virtuemart_paymentmethod_id = $billingDetail->virtuemart_paymentmethod_id;
@@ -51,7 +54,8 @@ foreach ( $cart->products as $product ) {
 		"Qty" => $product->quantity,
 	);
 }
-$data->amount = round($priceInCents);
+
+$data->amount = $priceInCents;
 $data->currency = $currency;
 $data->exponent = $paylikeCurrency->getPaylikeCurrency($currency)['exponent'];
 
@@ -63,13 +67,17 @@ $data->customer->phoneNo = $billingDetail->phone_1 ;
 $data->customer->IP = $_SERVER["REMOTE_ADDR"];
 $data->platform = array(
 	'name' => 'Joomla',
-	'version' => $this->getJoomlaVersions()
+	'version' => $this->getJoomlaVersions(),
 	);
 $data->ecommerce = array(
 	'name' => 'VirtueMart',
-	'version' => $this->getVirtuemartVersions()
+	'version' => $this->getVirtuemartVersions(),
 	);
-$data->version = $this->version;
+$data->version = array(
+	'name' => 'Paylike',
+	'version' => $this->version,
+	);
+
 $data->ajaxUrl = juri::root(true).'/index.php?option=com_virtuemart&view=plugin&vmtype=vmpayment&name=paylike';
 ?>
 <style>
@@ -120,7 +128,7 @@ jQuery(document).ready(function($) {
 	function pay(){
 		paylike.pay({
 			test: ('1' == datas.testMode) ? (true) : (false),
-			title: datas.title,
+			title: datas.popup_title,
 			description: datas.description,
 			amount: {
 				currency: datas.currency,

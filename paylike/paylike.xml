@@ -2,13 +2,13 @@
 <extension version="2.5" type="plugin" group="vmpayment" method="upgrade">
     <name>VM - Payment, Paylike Version 2</name>
     <creationDate>April 2020</creationDate>
-    <creationDate>25 May 2020</creationDate>
     <author>Patrick Kohl</author>
     <authorUrl>http://shop.st42.fr</authorUrl>
     <copyright>Copyright (C) 2018 STUDIO42 France. All rights reserved.</copyright>
     <license>http://www.gnu.org/licenses/gpl-2.0.html GNU/GPL</license>
-    <version>2.1.0.0</version>
-    <description><![CDATA[<a href="http://paylike.com" target="_blank">Paylke</a> is a popular
+    <version>2.1.6</version>
+    <description>
+        <![CDATA[<a href="https://paylike.io" target="_blank">Paylike</a> is a popular
   payment provider. ]]>
     </description>
     <!-- Include plugin files and folders -->
@@ -24,7 +24,7 @@
     <vmconfig>
         <fields name="params">
             <fieldset name="payment"  addfieldpath="/administrator/components/com_virtuemart/fields">
-				<field name="checkConditionsCore" value="1" default="1" type="hidden"/>
+                <field name="checkConditionsCore" value="1" default="1" type="hidden"/>
                 <field type="text" name="title" default="Credit Card (Paylike)" label="VMPAYMENT_PAYLIKE_TITLE"/>
                 <field name="active" type="list" default="1" label="VMPAYMENT_PAYLIKE_ACTIVE">
                     <option value="1">Yes</option>
@@ -32,7 +32,6 @@
                 </field>
                 <field type="textarea" name="description" label="VMPAYMENT_PAYLIKE_DESCRIPTION"
                        default="Secure payment with credit card via © Paylike" rows="5" cols="10"/>
-
                 <field name="test_mode" type="list" label="VMPAYMENT_TEST_MODE" default=""
                        description="VMPAYMENT_TEST_MODE_DESCRIPTION">
                     <option value="1">Test</option>
@@ -42,7 +41,6 @@
                        description="VMPAYMENT_PAYLIKE_MODE_DESCRIPTION"/>
                 <field type="text" name="live_public_key" label="VMPAYMENT_PAYLIKE_LIVE_MODE_PUBLIC_KEY" default=""
                        description="VMPAYMENT_PAYLIKE_MODE_DESCRIPTION"/>
-
                 <field type="text" name="test_api_key" label="VMPAYMENT_PAYLIKE_TEST_MODE_API_KEY" default=""
                        description="VMPAYMENT_PAYLIKE_MODE_DESCRIPTION"/>
                 <field type="text" name="test_public_key" label="VMPAYMENT_PAYLIKE_TEST_MODE_PUBLIC_KEY" default=""
@@ -59,11 +57,18 @@
                     <option value="instant">Instant</option>
                     <option value="delayed">Delayed</option>
                 </field>
-				<!-- <field name="status_pending" type="vmorderstate" scope="com_virtuemart" default="U"
+                <field type="vmacceptedcurrency" name="payment_currency" label="VMPAYMENT_PAYLIKE_CURRENCY" default=""
+                       description="VMPAYMENT_PAYLIKE_CURRENCY_DESCRIPTION"/>
+                <field name="email_currency" type="list" default="vendor" label="VMPAYMENT_PAYLIKE_EMAIL_CURRENCY"
+                       description="VMPAYMENT_PAYLIKE_EMAIL_CURRENCY_DESCRIPTION">
+                    <option value="vendor">VMPAYMENT_PAYLIKE_EMAIL_CURRENCY_VENDOR</option>
+                    <option value="payment">VMPAYMENT_PAYLIKE_EMAIL_CURRENCY_PAYMENT</option>
+                </field>
+                <!-- <field name="status_pending" type="vmorderstate" scope="com_virtuemart" default="U"
                        label="VMPAYMENT_PAYLIKE_STATUS_PENDING" description="VMPAYMENT_PAYLIKE_STATUS_PENDING_TIP"/> -->
                 <field name="status_success" type="vmorderstate" scope="com_virtuemart" default="C"
                        label="VMPAYMENT_PAYLIKE_STATUS_SUCCESS" description="VMPAYMENT_PAYLIKE_STATUS_SUCCESS_TIP"/>
-               <!-- <field name="status_ipn_success_updateable" type="vmorderstate" scope="com_virtuemart" default=""  multiple="true"
+                <!-- <field name="status_ipn_success_updateable" type="vmorderstate" scope="com_virtuemart" default=""  multiple="true"
                        label="VMPAYMENT_PAYLIKE_STATUS_UPDATEABLE" description="VMPAYMENT_PAYLIKE_STATUS_UPDATEABLE_TIP"/>
                 <field name="status_canceled" type="vmorderstate" scope="com_virtuemart" default="X"
                        label="VMPAYMENT_PAYLIKE_STATUS_CANCEL" description="VMPAYMENT_PAYLIKE_STATUS_CANCEL_TIP"/> -->
@@ -92,7 +97,7 @@
                 <field name="visaelectron" type="filelist" hide_none="true" hide_default="true" directory='plugins/vmpayment/paylike/images/' label="VMPAYMENT_PAYLIKE_VISAELECTRON_LOGO" description=""
                        default="visaelectron.svg"/>
             </fieldset>
-			<fieldset name="fee">
+            <fieldset name="fee">
                 <field name="cost_per_transaction" type="text" label="VMPAYMENT_PAYLIKE_COST_PER_TRANSACTION"
                        description="VMPAYMENT_PAYLIKE_COST_PER_TRANSACTION_TIP"/>
                 <field name="cost_min_transaction" type="text" label="VMPAYMENT_PAYLIKE_COST_MIN_TRANSACTION"
@@ -102,8 +107,8 @@
                 <field name="tax_id" type="vmtaxes" scope="com_virtuemart" label="VMPAYMENT_PAYLIKE_TAX"
                        description="VMPAYMENT_PAYLIKE_TAX_TIP"/>
             </fieldset>
-			<fieldset name="option">
-		                <field name="min_amount" type="text" label="VMPAYMENT_PAYLIKE_MIN_AMOUNT"
+            <fieldset name="option">
+                <field name="min_amount" type="text" label="VMPAYMENT_PAYLIKE_MIN_AMOUNT"
                        description="VMPAYMENT_PAYLIKE_MIN_AMOUNT_TIP"/>
                 <field name="max_amount" type="text" label="VMPAYMENT_PAYLIKE_MAX_AMOUNT"
                        description="VMPAYMENT_PAYLIKE_MAX_AMOUNT_TIP"/>

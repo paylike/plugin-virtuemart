@@ -80,9 +80,10 @@ export var TestMethods = {
         cy.get('.vm-btn-primary.showcart').click();
 
         /** Choose Paylike. */
-        cy.get('.vm-payment-plugin-single').contains(this.PaylikeName, {matchCase: false}).then(($div) => {
-            $div.children('input').trigger('click');
-        });
+        cy.get(`.vm-payment-plugin-single .${this.PaylikeName}-wrapper`).parents('div').children('input').check();
+
+        /** Wait #tos element to be reattached to the DOM. */
+        cy.wait(1000);
 
         /** Accept terms of services. */
         cy.get('#tos').click();
