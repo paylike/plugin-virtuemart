@@ -27,9 +27,13 @@ if ( ! class_exists( 'vmPSPlugin' ) ) {
  * http://shop.st42.fr
  */
 
+use Joomla\CMS\Factory;
+use Joomla\CMS\Version;
+use Joomla\CMS\Router\Route;
+
 class plgVmPaymentPaylike extends vmPSPlugin {
 
-	public $version = '2.1.6';
+	public $version = '2.2.0';
 	static $IDS = array();
 	protected $_isInList = false;
 	function __construct (& $subject, $config) {
@@ -77,7 +81,7 @@ class plgVmPaymentPaylike extends vmPSPlugin {
 			'cost_min_transaction'        => 'decimal(10,2)',
 			'cost_percent_total'          => 'decimal(10,2)',
 			'tax_id'                      => 'smallint(1)',
-			'paylike_data'                => 'varchar(65000)'
+			'paylike_data'                => 'text(65000)'
 
 		);
 
@@ -111,12 +115,18 @@ class plgVmPaymentPaylike extends vmPSPlugin {
 
 		$orderTotal = $order['details']['BT']->order_total;
 		$price = vmPSPlugin::getAmountValueInCurrency($orderTotal, $method->payment_currency);
-		$currency = shopFunctions::getCurrencyByID($method->payment_currency, 'currency_code_3');
+
+		$currency = $method->payment_currency;
+		// backward compatibility
+		if (Version::MAJOR_VERSION < 4) {
+			$currency = shopFunctions::getCurrencyByID($method->payment_currency, 'currency_code_3');
+		}
+
 		$precision = $paylikeCurrency->getPaylikeCurrency($currency)['exponent'] ?? 2;
 		$priceInCents = (int) ceil( round($price * $paylikeCurrency->getPaylikeCurrencyMultiplier($currency), $precision));
 
 		if (!empty($method->payment_info)) {
-			$lang = JFactory::getLanguage ();
+			$lang = Factory::getLanguage ();
 			if ($lang->hasKey ($method->payment_info)) {
 				$method->payment_info = vmText::_ ($method->payment_info);
 			}
@@ -126,7 +136,7 @@ class plgVmPaymentPaylike extends vmPSPlugin {
 
 		//verify the session
 		if($method->checkout_mode === 'before') {
-			$session = JFactory::getSession();
+			$session = Factory::getSession();
 			$transactionId = $session->get( 'paylike.transactionId','');
 			$hasError = true;
 			if($transactionId) {
@@ -143,8 +153,10 @@ class plgVmPaymentPaylike extends vmPSPlugin {
 			// return to cart and don't save transaction values, if we don't get the right values;
 			if($hasError) {
 				$msg = 'Paylike Transaction not found '.$transactionId;
-				$app = JFactory::getApplication();
-				$app->redirect(JRoute::_('index.php?option=com_virtuemart&view=cart'), $msg);
+				$app = Factory::getApplication();
+				$app->enqueueMessage($msg, 'error');
+				$app->redirect(Route::_('index.php?option=com_virtuemart&view=cart'), 301);
+				return;
 			}
 		}
 
@@ -210,7 +222,7 @@ class plgVmPaymentPaylike extends vmPSPlugin {
 			 * Add the additional info here
 			 */
 			if ($method->capture_mode === 'instant') {
-				$date = JFactory::getDate();
+				$date = Factory::getDate();
 				$today = $date->toSQL();
 				$order['paid_on'] = $today;
 				$order['paid'] = $orderTotal;
@@ -327,6 +339,9 @@ class plgVmPaymentPaylike extends vmPSPlugin {
 	}
 
 	/**
+	 * Virtuemart V4 word case changed
+	 * @see https://virtuemart.net/news/506-virtuemart-4
+	 *
 	 * Calculate the price (value, tax_id) of the selected method
 	 * It is called by the calculator
 	 * This function does NOT to be reimplemented. If not reimplemented, then the default values from this function are taken.
@@ -336,7 +351,7 @@ class plgVmPaymentPaylike extends vmPSPlugin {
 	 * @return null if the method was not selected, false if the shiiping rate is not valid any more, true otherwise
 	 *
 	 */
-	public function plgVmonSelectedCalculatePricePayment (VirtueMartCart $cart, array &$cart_prices, &$cart_prices_name) {
+	public function plgVmOnSelectedCalculatePricePayment (VirtueMartCart $cart, array &$cart_prices, &$cart_prices_name) {
 
 		return $this->onSelectedCalculatePrice ($cart, $cart_prices, $cart_prices_name);
 	}
@@ -354,7 +369,12 @@ class plgVmPaymentPaylike extends vmPSPlugin {
 		}
 		$this->getPaymentCurrency ($method);
 
-		$paymentCurrencyId = $method->payment_currency;
+		$paymentCurrencyId = shopFunctions::getCurrencyIDByName($method->payment_currency);
+
+		// backward compatibility
+		if (Version::MAJOR_VERSION < 4) {
+			$paymentCurrencyId = $method->payment_currency;
+		}
 		return;
 	}
 
@@ -508,9 +528,8 @@ class plgVmPaymentPaylike extends vmPSPlugin {
 
 	/* get current joomla version */
 	function getJoomlaVersions() {
-		jimport('joomla.version');
-		$version = new JVersion();
-		return $version->RELEASE;
+		$version = new Version();
+		return $version->getShortVersion();
 	}
 
 	/* get current Virtuemart version */
@@ -570,7 +589,13 @@ class plgVmPaymentPaylike extends vmPSPlugin {
 
 					$orderTotal = $details->order_total;
 					$price = vmPSPlugin::getAmountValueInCurrency($orderTotal, $method->payment_currency);
-					$currency = shopFunctions::getCurrencyByID($method->payment_currency, 'currency_code_3');
+
+					$currency = $method->payment_currency;
+					// backward compatibility
+					if (Version::MAJOR_VERSION < 4) {
+						$currency = shopFunctions::getCurrencyByID($method->payment_currency, 'currency_code_3');
+					}
+
 					$precision = $paylikeCurrency->getPaylikeCurrency($currency)['exponent'] ?? 2;
 					$priceInCents = (int) ceil( round($price * $paylikeCurrency->getPaylikeCurrencyMultiplier($currency), $precision));
 
@@ -594,7 +619,7 @@ class plgVmPaymentPaylike extends vmPSPlugin {
 						 * Add the additional info here
 						 */
 						if ($method->capture_mode === 'instant') {
-							$date = JFactory::getDate();
+							$date = Factory::getDate();
 							$today = $date->toSQL();
 							$order['paid_on'] = $today;
 							$order['paid'] = $orderTotal;
@@ -616,7 +641,7 @@ class plgVmPaymentPaylike extends vmPSPlugin {
 			}
 		} else {
 			$task = vRequest::get('paylikeTask');
-			$session = JFactory::getSession();
+			$session = Factory::getSession();
 			if($task === 'cartData') {
 
 				$paylikeID = uniqid('paylike_');
@@ -629,11 +654,17 @@ class plgVmPaymentPaylike extends vmPSPlugin {
 
 				$orderTotal = $cart->cartPrices['billTotal'];
 				$price = vmPSPlugin::getAmountValueInCurrency($orderTotal, $method->payment_currency);
-				$currency = shopFunctions::getCurrencyByID($method->payment_currency, 'currency_code_3');
+
+				$currency = $method->payment_currency;
+				// backward compatibility
+				if (Version::MAJOR_VERSION < 4) {
+					$currency = shopFunctions::getCurrencyByID($method->payment_currency, 'currency_code_3');
+				}
+
 				$precision = $paylikeCurrency->getPaylikeCurrency($currency)['exponent'] ?? 2;
 				$priceInCents = (int) ceil( round($price * $paylikeCurrency->getPaylikeCurrencyMultiplier($currency), $precision));
 
-				$lang = JFactory::getLanguage();
+				$lang = Factory::getLanguage();
 				$languages = JLanguageHelper::getLanguages( 'lang_code' );
 				$locale = $languages[ $lang->getTag() ]->sef;
 				$json->publicKey = $this->publicKey;
@@ -676,7 +707,7 @@ class plgVmPaymentPaylike extends vmPSPlugin {
 				}
 			}
 		}
-		$jAp = JFactory::getApplication();
+		$jAp = Factory::getApplication();
 		$json->JoomMsg = $jAp->getMessageQueue();
 		echo json_encode($json);
 		jexit();
@@ -689,7 +720,7 @@ class plgVmPaymentPaylike extends vmPSPlugin {
 			$data = new stdClass();
 			$data->paylike_data = $transactionId;
 			$data->virtuemart_order_id = $orderid;
-			$db	= JFactory::getDBO();
+			$db	= Factory::getDBO();
 			$db->updateObject($this->_tablename, $data, 'virtuemart_order_id');
 	}
 

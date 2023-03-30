@@ -22,8 +22,15 @@ $billingDetail = $viewData["billingDetails"];
 $paylikeCurrency = new PaylikeCurrency();
 $this->getPaymentCurrency( $method );
 
-$price = vmPSPlugin::getAmountValueInCurrency($cart->cartPrices['billTotal'], $method->payment_currency);
-$currency = shopFunctions::getCurrencyByID($method->payment_currency, 'currency_code_3');
+$orderTotal = $billingDetail->order_total;
+$price = vmPSPlugin::getAmountValueInCurrency($orderTotal, $method->payment_currency);
+
+$currency = $method->payment_currency;
+// backward compatibility
+if (\Joomla\CMS\Version::MAJOR_VERSION < 4) {
+	$currency = shopFunctions::getCurrencyByID($method->payment_currency, 'currency_code_3');
+}
+
 $precision = $paylikeCurrency->getPaylikeCurrency($currency)['exponent'] ?? 2;
 $priceInCents = (int) ceil( round($price * $paylikeCurrency->getPaylikeCurrencyMultiplier($currency), $precision));
 
@@ -41,8 +48,8 @@ $data->paylikeID = $paylikeID; // this is session ID to secure the transaction, 
 $data->publicKey = $this->setKey($method);
 $data->testMode = $method->test_mode;
 
-$data->popup_title = jText::_($method->popup_title);
-$data->description = jText::_($method->description);
+$data->popup_title = JText::_($method->popup_title);
+$data->description = JText::_($method->description);
 $data->orderId = $billingDetail->virtuemart_order_id;
 $data->virtuemart_paymentmethod_id = $billingDetail->virtuemart_paymentmethod_id;
 $data->orderNo = $billingDetail->order_number;
@@ -113,7 +120,7 @@ if($viewData["orderlink"]){
 ?>
 </div>
 <script>
-jQuery(document).ready(function($) {
+jQuery(document).ready(function() {
 	var datas = <?php echo json_encode($data) ?>;
 
 	var publicKey = {
@@ -122,7 +129,7 @@ jQuery(document).ready(function($) {
 
 	paylike = Paylike({key: datas.publicKey});
 
-	$('#paylike-pay').on('click',function(){
+	jQuery('#paylike-pay').on('click',function(){
 		pay();
 	});
 	function pay(){
@@ -154,15 +161,15 @@ jQuery(document).ready(function($) {
 							'virtuemart_paymentmethod_id' : datas.virtuemart_paymentmethod_id,
 							'format' : 'json'
 						};
-					$.ajax({
+					jQuery.ajax({
 						type: "POST",
 						url: datas.ajaxUrl,
 						async: false,
 						data: payData,
 						success: function(data) {
 							if(data.success =='1') {
-								$('#paylike-after-info').toggleClass('paylike-info-hide');
-								$('#paylike-temp-info').remove();
+								jQuery('#paylike-after-info').toggleClass('paylike-info-hide');
+								jQuery('#paylike-temp-info').remove();
 							} else {
 								alert(data.error);
 								//callback(r,datas);
