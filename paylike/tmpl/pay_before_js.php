@@ -16,16 +16,16 @@ vmPaylike.methodId = <?php echo (int)$method->virtuemart_paymentmethod_id ?>;
 vmPaylike.paymentDone = false;
 
 <?php if ($vponepagecheckout) { ?>
-	jQuery(document).ready(function($) {
+	jQuery(document).ready(function() {
 	  var bindCheckoutForm = function() {
-        var form = $('#checkoutForm');
+        var form = jQuery('#checkoutForm');
 
         if (!form.data('vmPaylike-ready')) {
             form.on('submit', function(e) {
                 if (!form.data('vmPaylike-verified')) {
                     e.preventDefault();
-					var $selects = $("[name=virtuemart_paymentmethod_id]"),
-						methodId  = $selects.length ? $("[name=virtuemart_paymentmethod_id]:checked").val() : 0,
+					var $selects = jQuery("[name=virtuemart_paymentmethod_id]"),
+						methodId  = $selects.length ? jQuery("[name=virtuemart_paymentmethod_id]:checked").val() : 0,
 						id = 0,
 						data = {'paylikeTask' : 'cartData'};
 					//set default method, if no select list of payments
@@ -37,7 +37,7 @@ vmPaylike.paymentDone = false;
 					if(id !== 0) {
 						data.virtuemart_paymentmethod_id = id;
 						// Get payment info for this method ID
-						$.getJSON( vmPaylike.site, data, function( datas ) {
+						jQuery.getJSON( vmPaylike.site, data, function( datas ) {
 
 							publicKey = {
 								key: datas.publicKey
@@ -71,7 +71,7 @@ vmPaylike.paymentDone = false;
 												'transactionId' : r.transaction.id,
 												'virtuemart_paymentmethod_id' : data.virtuemart_paymentmethod_id
 											};
-										$.ajax({
+										jQuery.ajax({
 											type: "POST",
 											url: vmPaylike.site,
 											async: false,
@@ -108,8 +108,8 @@ vmPaylike.paymentDone = false;
         }
       };
 	 bindCheckoutForm();
-	$(document).on('vpopc.event', function(event, type) {
-		var form = $('#checkoutForm');
+	jQuery(document).on('vpopc.event', function(event, type) {
+		var form = jQuery('#checkoutForm');
 			if(type == 'checkout.updated.shipmentpaymentcartlist'
 				|| type == 'checkout.updated.cartlist'
 				|| type == 'prepare.data.payment') form.data('vmPaylike-verified', false);
@@ -118,12 +118,12 @@ vmPaylike.paymentDone = false;
 		}
 	});
      // Bind on ajaxStop
-     $(document).ajaxStop(function() {
+     jQuery(document).ajaxStop(function() {
         bindCheckoutForm();
      });
 
 	function cancelSubmit() {
-		var form = $('#checkoutForm');
+		var form = jQuery('#checkoutForm');
 		validate = form.data('vmPaylike-verified', false);
 		ProOPC.removePageLoader();
 		ProOPC.enableSubmit();
@@ -132,18 +132,18 @@ vmPaylike.paymentDone = false;
 	});
 <?php } else { ?>
 
-jQuery(document).ready(function($) {
-	var $container = $(Virtuemart.containerSelector),
+jQuery(document).ready(function() {
+	var $container = jQuery(Virtuemart.containerSelector),
 		paymentDone = false;
 	$container.find('#checkoutForm').on('submit',function(e) {
 		// payment is done, then submit
 		if(paymentDone === true) return;
 		//check the selected paymentmethod
-		var $selects = $("[name=virtuemart_paymentmethod_id]"),
-			methodId  = $selects.length ? $("[name=virtuemart_paymentmethod_id]:checked").val() : 0,
+		var $selects = jQuery("[name=virtuemart_paymentmethod_id]"),
+			methodId  = $selects.length ? jQuery("[name=virtuemart_paymentmethod_id]:checked").val() : 0,
 			id = 0,
 			data = {'paylikeTask' : 'cartData'},
-			confirm = $(this).find('input[name="confirm"]').length,
+			confirm = jQuery(this).find('input[name="confirm"]').length,
 			$btn = jQuery('#checkoutForm').find('button[name="confirm"]'),
 			checkout = $btn.attr('task');
 
@@ -159,9 +159,9 @@ jQuery(document).ready(function($) {
 		data.virtuemart_paymentmethod_id = id;
 
 		// Get payment info for this method ID
-		$.getJSON( vmPaylike.site, data, function( datas ) {
+		jQuery.getJSON( vmPaylike.site, data, function( datas ) {
 			$btn.prop('disabled', false).addClass('vm-button-correct').removeClass('vm-button');
-			$(this).vm2front('stopVmLoading');
+			jQuery(this).vm2front('stopVmLoading');
 
 			publicKey = {
 				key: datas.publicKey
@@ -195,7 +195,7 @@ jQuery(document).ready(function($) {
 								'transactionId' : r.transaction.id,
 								'virtuemart_paymentmethod_id' : data.virtuemart_paymentmethod_id
 							};
-						$.ajax({
+						jQuery.ajax({
 							type: "POST",
 							url: vmPaylike.site,
 							async: false,
@@ -204,7 +204,7 @@ jQuery(document).ready(function($) {
 								if(data.success =='1') {
 									paymentDone = true;
 									$container.find('#checkoutForm').submit();
-									$(this).vm2front('startVmLoading');
+									jQuery(this).vm2front('startVmLoading');
 									$btn.attr('disabled', 'true');
 								} else {
 									alert(data.error);
