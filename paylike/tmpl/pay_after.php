@@ -27,7 +27,7 @@ $price = vmPSPlugin::getAmountValueInCurrency($orderTotal, $method->payment_curr
 
 $currency = $method->payment_currency;
 // backward compatibility
-if (\Joomla\CMS\Version::MAJOR_VERSION < 4) {
+if (is_numeric($method->payment_currency)) {
 	$currency = shopFunctions::getCurrencyByID($method->payment_currency, 'currency_code_3');
 }
 

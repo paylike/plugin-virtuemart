@@ -133,8 +133,15 @@ vmPaylike.paymentDone = false;
 <?php } else { ?>
 
 jQuery(document).ready(function() {
-	var $container = jQuery(Virtuemart.containerSelector),
-		paymentDone = false;
+	let $container = '';
+	let paymentDone = false;
+
+	if (Virtuemart.containerSelector) {
+		$container = jQuery(Virtuemart.containerSelector)
+	} else {
+		$container = jQuery('#cart-view')
+	}
+
 	$container.find('#checkoutForm').on('submit',function(e) {
 		// payment is done, then submit
 		if(paymentDone === true) return;

@@ -33,7 +33,7 @@ use Joomla\CMS\Router\Route;
 
 class plgVmPaymentPaylike extends vmPSPlugin {
 
-	public $version = '2.2.0';
+	public $version = '2.2.1';
 	static $IDS = array();
 	protected $_isInList = false;
 	function __construct (& $subject, $config) {
@@ -118,7 +118,7 @@ class plgVmPaymentPaylike extends vmPSPlugin {
 
 		$currency = $method->payment_currency;
 		// backward compatibility
-		if (Version::MAJOR_VERSION < 4) {
+		if (is_numeric($method->payment_currency)) {
 			$currency = shopFunctions::getCurrencyByID($method->payment_currency, 'currency_code_3');
 		}
 
@@ -369,12 +369,13 @@ class plgVmPaymentPaylike extends vmPSPlugin {
 		}
 		$this->getPaymentCurrency ($method);
 
-		$paymentCurrencyId = shopFunctions::getCurrencyIDByName($method->payment_currency);
-
 		// backward compatibility
-		if (Version::MAJOR_VERSION < 4) {
+		if (is_numeric($method->payment_currency)) {
 			$paymentCurrencyId = $method->payment_currency;
+		} else {
+			$paymentCurrencyId = shopFunctions::getCurrencyIDByName($method->payment_currency);
 		}
+
 		return;
 	}
 
@@ -592,7 +593,7 @@ class plgVmPaymentPaylike extends vmPSPlugin {
 
 					$currency = $method->payment_currency;
 					// backward compatibility
-					if (Version::MAJOR_VERSION < 4) {
+					if (is_numeric($method->payment_currency)) {
 						$currency = shopFunctions::getCurrencyByID($method->payment_currency, 'currency_code_3');
 					}
 
@@ -657,7 +658,7 @@ class plgVmPaymentPaylike extends vmPSPlugin {
 
 				$currency = $method->payment_currency;
 				// backward compatibility
-				if (Version::MAJOR_VERSION < 4) {
+				if (is_numeric($method->payment_currency)) {
 					$currency = shopFunctions::getCurrencyByID($method->payment_currency, 'currency_code_3');
 				}
 
